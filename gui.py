@@ -72,6 +72,7 @@ class ExcelProcessorGUI:
         self.start_time: Optional[float] = None
         self.processing_thread: Optional[threading.Thread] = None
         self.queue = queue.Queue()
+        self.process_callback = None
         
         # Recovery mode flag - enabled by default on Windows
         self.recovery_mode = tk.BooleanVar(value=sys.platform.startswith('win'))

@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 # Track whether integration has been applied
 _integration_applied = False
 
+# Track whether Windows modules are loaded
+WINDOWS_MODULES_LOADED = False
+
 def is_windows() -> bool:
     """Check if running on Windows."""
     return sys.platform.startswith('win')
@@ -331,7 +334,7 @@ def monkey_patch_os_functions() -> None:
 
 def setup_windows_integration() -> None:
     """Set up Windows-specific integrations if running on Windows."""
-    global _integration_applied
+    global _integration_applied, WINDOWS_MODULES_LOADED
     
     if _integration_applied:
         return
@@ -365,6 +368,9 @@ def setup_windows_integration() -> None:
         
         # Mark integration as applied
         _integration_applied = True
+        
+        # Mark Windows modules as loaded
+        WINDOWS_MODULES_LOADED = True
         
         logger.info("Windows integration setup complete")
         
