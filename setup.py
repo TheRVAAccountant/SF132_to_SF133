@@ -16,9 +16,10 @@ setup(
         "openpyxl>=3.0.0",
         "pandas>=1.0.0",
         "psutil",
+        "pywin32;platform_system=='Windows'",  # Essential for Windows operation
     ],
     extras_require={
-        "windows": ["pywin32"],
+        "dev": ["pytest", "black", "flake8"],
     },
     entry_points={
         "console_scripts": [

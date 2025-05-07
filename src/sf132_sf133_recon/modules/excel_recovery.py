@@ -198,7 +198,7 @@ def repair_workbook(file_path: str) -> bool:
 
 def fix_file_in_use_error(file_path: str) -> Tuple[bool, str]:
     """
-    Fix the "file in use" error for Excel files.
+    Fix the "file in use" error for Excel files with advanced Windows-specific recovery.
     
     Args:
         file_path: Path to the Excel file
@@ -211,83 +211,209 @@ def fix_file_in_use_error(file_path: str) -> Tuple[bool, str]:
     
     logger.info(f"Attempting to fix file-in-use error for: {file_path}")
     
-    # Create a copy path for the fixed file
-    fixed_path = str(Path(file_path).with_stem(f"{Path(file_path).stem}_fixed"))
+    # Create a timestamp for the fixed file
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
     
-    # First try to close any Excel instances that might have the file open
+    # Create a copy path for the fixed file
+    fixed_path = str(Path(file_path).with_stem(f"{Path(file_path).stem}_fixed_{timestamp}"))
+    
+    # Windows-specific path normalization
+    if is_windows_platform():
+        try:
+            from ..utils.win_path_handler import normalize_windows_path
+            file_path = normalize_windows_path(file_path)
+            fixed_path = normalize_windows_path(fixed_path)
+        except ImportError:
+            logger.warning("Windows path handler not available")
+    
+    # Approach 1: Close Excel instances and try simple copy
     from .excel_handler import close_excel_instances
     close_excel_instances()
+    
+    # On Windows, try Windows-specific unlocking
+    if is_windows_platform():
+        try:
+            from ..utils.win_api import force_file_unlock, cleanup_excel_temp_files
+            
+            # Clean up Excel temp files that might be causing locks
+            cleanup_excel_temp_files()
+            
+            # Force unlock the file
+            force_file_unlock(file_path)
+        except ImportError:
+            logger.warning("Windows API module not available")
     
     # Wait a moment for the OS to release the file
     time.sleep(1)
     
-    # Try to create a copy of the file
+    # Approach 2: Try to create a copy with robust file operations
     try:
         from .file_operations import safe_file_copy
-        if safe_file_copy(file_path, fixed_path):
+        if safe_file_copy(file_path, fixed_path, retries=5):
             logger.info(f"Successfully created fixed copy: {fixed_path}")
             return True, fixed_path
     except Exception as e:
-        logger.warning(f"Error during file copy: {e}")
+        logger.warning(f"Standard file copy failed: {e}")
     
-    # If copy fails on Windows, try more aggressive recovery
+    # Approach 3: On Windows, try advanced recovery
+    if is_windows_platform():
+        logger.info("Attempting advanced Windows recovery methods...")
+        
+        # Method 1: Use robust Excel session to create clean copy
+        try:
+            from .excel_session import repair_excel_workbook
+            if repair_excel_workbook(file_path, fixed_path):
+                logger.info(f"Successfully created repaired copy: {fixed_path}")
+                return True, fixed_path
+        except ImportError:
+            logger.warning("Excel session module not available")
+        
+        # Method 2: Use pandas to extract data if file is completely locked
+        try:
+            import pandas as pd
+            logger.info("Attempting pandas-based extraction...")
+            
+            # Read all sheets with pandas
+            excel_file = pd.ExcelFile(file_path)
+            sheet_names = excel_file.sheet_names
+            
+            # Create a new Excel writer
+            writer = pd.ExcelWriter(fixed_path, engine='openpyxl')
+            
+            # Copy each sheet
+            sheets_copied = 0
+            for sheet_name in sheet_names:
+                try:
+                    df = pd.read_excel(file_path, sheet_name=sheet_name)
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    sheets_copied += 1
+                except Exception as sheet_e:
+                    logger.warning(f"Error extracting sheet {sheet_name}: {sheet_e}")
+            
+            # Save the writer
+            writer.close()
+            
+            if os.path.exists(fixed_path) and os.path.getsize(fixed_path) > 0 and sheets_copied > 0:
+                logger.info(f"Successfully extracted {sheets_copied} sheets to: {fixed_path}")
+                return True, fixed_path
+                
+        except Exception as e:
+            logger.warning(f"Pandas extraction failed: {e}")
+        
+        # Method 3: Last resort - create a new file with basic structure
+        try:
+            logger.info("Attempting to create new file with basic structure...")
+            
+            import openpyxl
+            wb = openpyxl.Workbook()
+            
+            # Add a note about recovery
+            sheet = wb.active
+            sheet.title = "Recovery"
+            sheet["A1"] = "This file was created as a recovery from a locked file:"
+            sheet["A2"] = file_path
+            sheet["A3"] = f"Created on: {time.ctime()}"
+            sheet["A4"] = "Original file was locked and could not be processed."
+            
+            # Save the new file
+            emergency_path = fixed_path.replace("_fixed_", "_emergency_")
+            wb.save(emergency_path)
+            
+            logger.warning(f"Created emergency recovery file: {emergency_path}")
+            return False, f"Created emergency file: {emergency_path}"
+            
+        except Exception as e:
+            logger.error(f"Emergency file creation failed: {e}")
+    
+    return False, "Failed to fix file-in-use error despite multiple recovery attempts"
+
+def repair_excel_file_access(file_path: str) -> Tuple[bool, str]:
+    """
+    Comprehensive repair for Excel files with access issues.
+    
+    This function attempts multiple recovery strategies in sequence
+    to fix Excel files that have access issues.
+    
+    Args:
+        file_path: Path to the Excel file
+        
+    Returns:
+        Tuple[bool, str]: (Success status, Result message or path)
+    """
+    if not os.path.exists(file_path):
+        return False, f"File not found: {file_path}"
+    
+    logger.info(f"Starting comprehensive repair for: {file_path}")
+    
+    # Create timestamp for recovery files
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    
+    # Create backup first
+    backup_path = str(Path(file_path).with_stem(f"{Path(file_path).stem}_backup_{timestamp}"))
+    
+    # Windows-specific path normalization
     if is_windows_platform():
         try:
-            # Import specialized Windows file handler if available
-            try:
-                from ..utils.win_path_handler import normalize_windows_path
-                file_path = normalize_windows_path(file_path)
-                fixed_path = normalize_windows_path(fixed_path)
-            except ImportError:
-                pass
-                
-            # Try to force unlock the file on Windows
-            is_fixed = False
-            
-            # Method 1: Use COM to create a clean copy
-            if WINDOWS_COM_AVAILABLE:
-                try:
-                    from .com_operations import create_clean_copy
-                    if create_clean_copy(file_path, fixed_path):
-                        logger.info(f"Successfully created COM-based clean copy: {fixed_path}")
-                        return True, fixed_path
-                except Exception as e:
-                    logger.warning(f"COM clean copy failed: {e}")
-            
-            # Method 2: Use pandas to extract data if file is completely locked
-            try:
-                import pandas as pd
-                logger.info("Attempting pandas-based extraction...")
-                
-                # Read all sheets with pandas
-                excel_file = pd.ExcelFile(file_path)
-                sheet_names = excel_file.sheet_names
-                
-                # Create a new Excel writer
-                writer = pd.ExcelWriter(fixed_path, engine='openpyxl')
-                
-                # Copy each sheet
-                for sheet_name in sheet_names:
-                    try:
-                        df = pd.read_excel(file_path, sheet_name=sheet_name)
-                        df.to_excel(writer, sheet_name=sheet_name, index=False)
-                    except Exception as e:
-                        logger.warning(f"Error extracting sheet {sheet_name}: {e}")
-                
-                # Save the writer
-                writer.close()
-                
-                if os.path.exists(fixed_path) and os.path.getsize(fixed_path) > 0:
-                    logger.info(f"Successfully extracted data to: {fixed_path}")
-                    return True, fixed_path
-                    
-            except Exception as e:
-                logger.warning(f"Pandas extraction failed: {e}")
-        
-        except Exception as e:
-            logger.error(f"Recovery process failed: {e}")
+            from ..utils.win_path_handler import normalize_windows_path
+            file_path = normalize_windows_path(file_path)
+            backup_path = normalize_windows_path(backup_path)
+        except ImportError:
+            logger.warning("Windows path handler not available")
     
-    return False, "Failed to fix file-in-use error"
+    # First, try a standard file copy to create backup
+    try:
+        from .file_operations import safe_file_copy
+        if safe_file_copy(file_path, backup_path):
+            logger.info(f"Created backup before repair: {backup_path}")
+        else:
+            logger.warning("Could not create backup before repair")
+    except Exception as e:
+        logger.warning(f"Backup creation failed: {e}")
+    
+    # Stage 1: Try file-in-use error fix
+    success, result_path = fix_file_in_use_error(file_path)
+    if success:
+        return True, result_path
+    
+    # Stage 2: On Windows, try advanced repair methods
+    if is_windows_platform():
+        logger.info("Attempting deep repair methods...")
+        
+        # Method 1: Reset Excel automation
+        try:
+            from ..utils.win_api import reset_excel_automation
+            reset_excel_automation()
+            logger.info("Reset Excel automation settings")
+            
+            # Try copy again after reset
+            advanced_path = str(Path(file_path).with_stem(f"{Path(file_path).stem}_repaired_{timestamp}"))
+            
+            from .file_operations import safe_file_copy
+            if safe_file_copy(file_path, advanced_path, retries=2):
+                logger.info(f"Copy successful after automation reset: {advanced_path}")
+                return True, advanced_path
+        except ImportError:
+            logger.warning("Windows API module not available")
+        
+        # Method 2: Try specialized session-based repair
+        try:
+            from .excel_session import repair_excel_workbook
+            
+            advanced_path = str(Path(file_path).with_stem(f"{Path(file_path).stem}_deeprepair_{timestamp}"))
+            
+            if repair_excel_workbook(file_path, advanced_path):
+                logger.info(f"Deep repair successful: {advanced_path}")
+                return True, advanced_path
+        except ImportError:
+            logger.warning("Excel session module not available")
+    
+    # If we have a backup but all repairs failed, return the backup
+    if os.path.exists(backup_path) and os.path.getsize(backup_path) > 0:
+        logger.warning("All repair methods failed, using backup")
+        return True, backup_path
+    
+    # Complete failure
+    return False, "All repair methods failed"
 
 def process_with_recovery(func: Callable, *args, **kwargs) -> Tuple[bool, Any]:
     """

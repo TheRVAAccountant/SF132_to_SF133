@@ -17,7 +17,9 @@ A professional application for processing SF132 and SF133 reconciliation Excel f
 ### Prerequisites
 
 - Python 3.9 or higher
-- Windows OS (required for COM automation with Excel)
+- Windows OS (REQUIRED - this application is designed specifically for Windows)
+- pywin32 package (for COM automation with Excel)
+- openpyxl and pandas packages for Excel processing
 
 ### Setup
 

@@ -17,13 +17,25 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple, Union
 import contextlib
 
-# Import platform-specific modules
-try:
-    import pythoncom
-    import win32com.client
-    WINDOWS_MODULES_AVAILABLE = True
-except ImportError:
+# Import platform-specific modules - these are essential for Windows operation
+import sys
+
+# Check if we're on Windows
+IS_WINDOWS = sys.platform.startswith('win')
+
+# On Windows, these modules are essential
+if IS_WINDOWS:
+    try:
+        import pythoncom
+        import win32com.client
+        WINDOWS_MODULES_AVAILABLE = True
+    except ImportError as e:
+        # On Windows, these imports are critical
+        raise ImportError(f"Critical Windows modules missing: {e}. Please install 'pywin32' package.") from e
+else:
+    # When not on Windows, note that functionality will be limited
     WINDOWS_MODULES_AVAILABLE = False
+    logger.warning("Not running on Windows - Excel COM automation unavailable")
 
 # Type aliases
 PathLike = Union[str, Path]
@@ -158,7 +170,7 @@ def close_excel_instances() -> List[int]:
 
 def safe_file_copy(source_path: str, dest_path: str, retries: int = 3, delay: float = 1.0) -> bool:
     """
-    Safely copy a file with retries.
+    Safely copy a file with retries and Windows-specific handling.
     
     Args:
         source_path: Source file path
@@ -172,14 +184,61 @@ def safe_file_copy(source_path: str, dest_path: str, retries: int = 3, delay: fl
     # Ensure destination directory exists
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     
+    # Windows-specific path handling
+    if IS_WINDOWS:
+        try:
+            from ..utils.win_path_handler import normalize_windows_path
+            source_path = normalize_windows_path(source_path)
+            dest_path = normalize_windows_path(dest_path)
+        except ImportError:
+            logger.warning("Windows path handler not available")
+    
     for attempt in range(retries):
         try:
-            # Close any Excel instances before attempting copy
-            if WINDOWS_MODULES_AVAILABLE and sys.platform.startswith('win'):
+            # Windows-specific file locking check and handling
+            if IS_WINDOWS:
+                try:
+                    # Import here to avoid circular imports
+                    from ..utils.win_api import is_file_locked_win
+                    
+                    # Check if source file is locked
+                    if is_file_locked_win(source_path):
+                        logger.warning(f"Source file is locked: {source_path}")
+                        
+                        # Try to unlock the file
+                        try:
+                            from ..utils.win_api import force_file_unlock
+                            force_file_unlock(source_path)
+                        except ImportError:
+                            logger.warning("Windows API module not available for unlocking")
+                            
+                        # Close any Excel instances
+                        close_excel_instances()
+                    
+                    # Check if destination file is locked
+                    if os.path.exists(dest_path) and is_file_locked_win(dest_path):
+                        logger.warning(f"Destination file is locked: {dest_path}")
+                        
+                        # Try to unlock the file
+                        try:
+                            from ..utils.win_api import force_file_unlock
+                            force_file_unlock(dest_path)
+                        except ImportError:
+                            logger.warning("Windows API module not available for unlocking")
+                            
+                        # Close any Excel instances
+                        close_excel_instances()
+                        
+                except ImportError:
+                    # Fall back to just closing Excel instances
+                    close_excel_instances()
+            else:
+                # On non-Windows, just close Excel instances
                 close_excel_instances()
                 
-            # Perform the copy
-            shutil.copy2(source_path, dest_path)
+            # Perform the copy with large buffer for better performance
+            with open(source_path, 'rb') as src_file, open(dest_path, 'wb') as dest_file:
+                shutil.copyfileobj(src_file, dest_file, 10*1024*1024)  # 10MB buffer
             
             # Verify the copy succeeded
             if not os.path.exists(dest_path):
@@ -199,6 +258,15 @@ def safe_file_copy(source_path: str, dest_path: str, retries: int = 3, delay: fl
                 time.sleep(delay)
                 # Increase delay for next retry
                 delay *= 1.5
+                
+                # On Windows, try additional recovery methods
+                if IS_WINDOWS and attempt > 0:
+                    try:
+                        # Clean up Excel temp files to release locks
+                        from ..utils.win_api import cleanup_excel_temp_files
+                        cleanup_excel_temp_files()
+                    except ImportError:
+                        logger.warning("Windows API module not available for cleaning temp files")
             else:
                 logger.error(f"Failed to copy file after {retries} attempts: {e}")
                 return False
@@ -318,12 +386,15 @@ def validate_excel_file(file_path: str) -> bool:
                     if has_errors:
                         logger.warning(f"Excel detected errors in {file_path}")
                         return False
+                    
+                    # If no errors found, continue
+                    return True
                         
                 except Exception as e:
                     logger.warning(f"COM validation failed: {e}")
                     return False
                     
-        # If we got here, file seems valid
+        # If we got here and didn't use COM validation, file seems valid
         return True
         
     except Exception as e:

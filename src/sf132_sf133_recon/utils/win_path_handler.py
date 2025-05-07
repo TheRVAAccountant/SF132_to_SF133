@@ -148,6 +148,109 @@ def handle_long_paths(path: str) -> str:
     
     return path
 
+def ensure_unc_path(path: str) -> str:
+    """
+    Ensure network paths are properly formatted as UNC paths on Windows.
+    
+    Args:
+        path: File path that might be a network path
+        
+    Returns:
+        str: Properly formatted UNC path
+    """
+    # Only relevant on Windows
+    if not is_windows():
+        return path
+        
+    # Return if not a network path
+    if not path.startswith(r'\\'):
+        return path
+        
+    # Normalize path separators
+    path = path.replace('/', '\\')
+    
+    # Check if this is already a properly formatted UNC path
+    if path.startswith(r'\\?\UNC\'):
+        return path
+        
+    # Format as UNC path for long path support
+    if path.startswith(r'\\'):
+        # Remove the initial \\ and add \\?\UNC\
+        path = r'\\?\UNC\' + path[2:]
+    
+    return path
+
+def get_windows_shortpath(path: str) -> str:
+    """
+    Get the Windows short path (8.3 format) for a long path name.
+    
+    Args:
+        path: Long file path
+        
+    Returns:
+        str: Windows short path
+    """
+    # Only relevant on Windows
+    if not is_windows():
+        return path
+        
+    if not os.path.exists(path):
+        return path
+        
+    try:
+        import win32api
+        return win32api.GetShortPathName(path)
+    except ImportError:
+        logger.warning("win32api not available, cannot get short path")
+        return path
+    except Exception as e:
+        logger.warning(f"Error getting short path: {e}")
+        return path
+
+def get_windows_special_folder(folder_name: str) -> str:
+    """
+    Get the path to a Windows special folder.
+    
+    Args:
+        folder_name: Name of the special folder (e.g., 'TEMP', 'DESKTOP')
+        
+    Returns:
+        str: Path to the special folder
+    """
+    # Only relevant on Windows
+    if not is_windows():
+        return ""
+        
+    try:
+        import win32com.client
+        import win32con
+        
+        # Map of folder names to CSIDL constants
+        folder_map = {
+            'TEMP': 0x2A,  # CSIDL_LOCAL_APPDATA\Temp
+            'APPDATA': 0x1A,  # CSIDL_APPDATA
+            'LOCALAPPDATA': 0x1C,  # CSIDL_LOCAL_APPDATA
+            'DESKTOP': 0x10,  # CSIDL_DESKTOPDIRECTORY
+            'DOCUMENTS': 0x05,  # CSIDL_PERSONAL
+            'PROFILE': 0x28,  # CSIDL_PROFILE
+        }
+        
+        if folder_name.upper() == 'TEMP':
+            # For TEMP, get %TEMP% directly
+            return os.environ.get('TEMP', '')
+        
+        if folder_name.upper() in folder_map:
+            shell = win32com.client.Dispatch("WScript.Shell")
+            folder_id = folder_map[folder_name.upper()]
+            folder = shell.SpecialFolders(folder_id)
+            return folder
+    except ImportError:
+        logger.warning("win32com not available, cannot get special folder")
+    except Exception as e:
+        logger.warning(f"Error getting special folder: {e}")
+    
+    return ""
+
 def fix_excel_path(path: str) -> str:
     """
     Fix a path for use with Excel, handling all Windows-specific issues.

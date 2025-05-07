@@ -16,6 +16,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("compat")
 
+# Check if running on Windows - this application requires Windows
+if not sys.platform.startswith('win'):
+    logger.warning("This application is designed specifically for Windows and may not function correctly on other platforms.")
+    print("WARNING: This application requires Windows to function properly.")
+    print("Running on a non-Windows platform may result in limited functionality or errors.")
+
 # Import refactored components
 try:
     # Core components
@@ -44,21 +50,37 @@ try:
     
 except ImportError as e:
     logger.error(f"Error importing refactored components: {e}")
+    
+    # On Windows, Windows-specific modules are required
+    if sys.platform.startswith('win'):
+        logger.critical("Windows-specific modules are required but not found")
+        print("CRITICAL ERROR: Windows-specific modules required but not found")
+        print("Please install the required dependencies for Windows operation:")
+        print("pip install pywin32 openpyxl pandas psutil")
+        raise ImportError("Windows-specific modules are required but not found") from e
+    
     logger.warning("Falling back to original modules")
     
     # Fall back to original imports if refactored modules aren't available
-    from excel_processor import ExcelProcessor
-    from gui import ExcelProcessorGUI
-    from main import ExcelProcessingApplication
-    from logger_config import LoggerSetup, ErrorHandler, performance_logger
-    from config import app_config
-    from excel_processor_config import ProcessingConfig, FileHandlingConfig, ExcelConfig
-    
-    warnings.warn(
-        "Using original module imports. Consider updating your code to use the "
-        "refactored package structure for better maintainability.",
-        DeprecationWarning, stacklevel=2
-    )
+    try:
+        from excel_processor import ExcelProcessor
+        from gui import ExcelProcessorGUI
+        from main import ExcelProcessingApplication
+        from logger_config import LoggerSetup, ErrorHandler, performance_logger
+        from config import app_config
+        from excel_processor_config import ProcessingConfig, FileHandlingConfig, ExcelConfig
+        
+        warnings.warn(
+            "Using original module imports. Consider updating your code to use the "
+            "refactored package structure for better maintainability.",
+            DeprecationWarning, stacklevel=2
+        )
+    except ImportError as original_import_error:
+        logger.critical(f"Failed to import required modules: {original_import_error}")
+        print(f"CRITICAL ERROR: Required modules missing: {original_import_error}")
+        print("Please install all required dependencies:")
+        print("pip install -r requirements.txt")
+        raise
 
 # Provide backward compatibility for specific functions
 def process_excel_file(file_path, password=None):

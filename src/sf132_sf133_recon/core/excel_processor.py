@@ -5,43 +5,61 @@ This module contains the primary ExcelProcessor class that handles the main
 Excel processing operations for SF132 to SF133 reconciliation.
 """
 
-from pathlib import Path
 import os
 import time
-import gc
 import logging
-from typing import Dict, Tuple, Optional, Any, List, Union
-from dataclasses import dataclass
-import queue
+import gc
 import shutil
+import tempfile
+import uuid
+from pathlib import Path
+from typing import Dict, Tuple, Optional, Any, List, Union
+from queue import Queue
 
-import openpyxl
-from openpyxl.styles import PatternFill, Font, Border, Side, Alignment, Color
-from openpyxl.styles.colors import COLOR_INDEX
-from openpyxl.cell import MergedCell
-from openpyxl.utils import get_column_letter
-from openpyxl.utils.exceptions import InvalidFileException
+# Try to import Excel-related modules - they might be unavailable on some platforms
+try:
+    import openpyxl
+    from openpyxl.styles import PatternFill, Font, Border, Side, Alignment, Color
+    from openpyxl.styles.colors import COLOR_INDEX
+    from openpyxl.cell import MergedCell
+    from openpyxl.utils import get_column_letter
+    from openpyxl.utils.exceptions import InvalidFileException
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 
-# Local imports
-from ..modules.excel_handler import close_excel_instances
-from ..modules.file_operations import (
-    create_verified_copy,
-    create_backup_file,
-    get_temp_file_path,
-    validate_excel_file
-)
-from ..modules.excel_cleaner import clean_excel_external_data
-from ..config import (
-    ProcessingConfig, 
-    FileHandlingConfig, 
-    ExcelConfig,
-    app_config
-)
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 
-# Type aliases
-Queue = queue.Queue
+# Import Windows-specific modules - these are essential for the application
+import sys
 
-logger = logging.getLogger(__name__)
+# Check if running on Windows
+IS_WINDOWS = sys.platform.startswith('win')
+
+# Import Windows-specific modules
+if IS_WINDOWS:
+    try:
+        import pythoncom
+        import win32com.client
+        import win32api
+        WINDOWS_COM_AVAILABLE = True
+    except ImportError as e:
+        # On Windows, these imports are critical
+        raise ImportError(f"Critical Windows modules missing: {e}. Please install 'pywin32' package.") from e
+else:
+    # When not on Windows, note that functionality will be limited
+    WINDOWS_COM_AVAILABLE = False
+    print("WARNING: Not running on Windows - Excel COM automation unavailable. Functionality will be limited.")
+
+# Local configuration
+DEFAULT_SHEET_NAME = "Sheet1"
+DEFAULT_HEADER_ROW = 5
+DEFAULT_HEADERS_TO_FIND = ["Difference", "Include in CFO Cert Letter", "Explanation"]
+DEFAULT_OUTPUT_DIR = "output"
 
 class ExcelProcessor:
     """
@@ -57,25 +75,35 @@ class ExcelProcessor:
             queue: Queue for communication with GUI
         """
         self.queue = queue
-        self.config = ProcessingConfig()
-        self.file_config = FileHandlingConfig()
-        self.excel_config = ExcelConfig()
+        self._setup_logging()
         self._temp_files = []  # Track temp files for cleanup
         
+        # Default configuration
+        self.sheet_name = DEFAULT_SHEET_NAME
+        self.header_row = DEFAULT_HEADER_ROW
+        self.headers_to_find = DEFAULT_HEADERS_TO_FIND
+        self.output_directory = DEFAULT_OUTPUT_DIR
+        
+        # Create output directory
+        os.makedirs(self.output_directory, exist_ok=True)
+        
+    def _setup_logging(self):
+        """Configure logging for the processor."""
+        self.logger = logging.getLogger(__name__)
+    
     def __del__(self):
         """Clean up resources when instance is destroyed."""
         self._cleanup_temp_files()
         
     def _cleanup_temp_files(self):
         """Clean up all temporary files."""
-        if app_config.cleanup_temp_files:
-            for temp_file in self._temp_files:
-                if os.path.exists(temp_file):
-                    try:
-                        os.unlink(temp_file)
-                        logger.debug(f"Cleaned up temp file: {temp_file}")
-                    except Exception as e:
-                        logger.warning(f"Failed to clean up temp file {temp_file}: {e}")
+        for temp_file in self._temp_files:
+            if os.path.exists(temp_file):
+                try:
+                    os.unlink(temp_file)
+                    self.logger.debug(f"Cleaned up temp file: {temp_file}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to clean up temp file {temp_file}: {e}")
     
     def _update_progress(self, value: float, message: str):
         """
@@ -87,7 +115,7 @@ class ExcelProcessor:
         """
         if self.queue:
             self.queue.put(("progress", (value, message)))
-        logger.info(message)
+        self.logger.info(message)
     
     def _update_status(self, message: str):
         """
@@ -98,8 +126,60 @@ class ExcelProcessor:
         """
         if self.queue:
             self.queue.put(("status", message))
-        logger.info(message)
+        self.logger.info(message)
     
+    def close_excel_instances(self):
+        """Terminate all existing Excel processes to prevent file locking."""
+        self._update_status("Ensuring all Excel instances are closed...")
+        
+        try:
+            import psutil
+            excel_pids = []
+            
+            # First find all Excel processes
+            for proc in psutil.process_iter(['pid', 'name']):
+                try:
+                    proc_name = proc.info['name']
+                    # Check for Excel process name on different platforms
+                    if proc_name and (
+                        'EXCEL.EXE' in proc_name.upper() or  # Windows
+                        'MICROSOFT EXCEL' in proc_name.upper()  # Mac
+                    ):
+                        excel_pids.append(proc.info['pid'])
+                except Exception:
+                    pass
+            
+            if excel_pids:
+                self._update_status(f"Found {len(excel_pids)} Excel processes to close")
+                
+            # Then terminate each process with proper cleanup
+            for pid in excel_pids:
+                try:
+                    proc = psutil.Process(pid)
+                    proc.terminate()
+                    proc.wait(timeout=5)
+                except Exception as e:
+                    self.logger.warning(f"Failed to terminate Excel process (PID {pid}): {e}")
+                    # Try more aggressive termination
+                    try:
+                        if psutil.pid_exists(pid):
+                            os.kill(pid, 9)  # SIGKILL
+                    except Exception:
+                        pass
+            
+            # Verify all processes are terminated
+            remaining = []
+            for pid in excel_pids:
+                if psutil.pid_exists(pid):
+                    remaining.append(pid)
+                    
+            if remaining:
+                self.logger.warning(f"Could not terminate {len(remaining)} Excel processes: {remaining}")
+            else:
+                self._update_status("All Excel processes successfully closed")
+        except ImportError:
+            self.logger.warning("psutil module not available, cannot close Excel instances")
+
     def process_file(self, original_file: str, password: str = None) -> bool:
         """
         Main processing function for Excel file.
@@ -120,11 +200,10 @@ class ExcelProcessor:
             new_file = self._generate_new_filename(original_file)
             
             # Ensure Excel is fully closed before starting
-            close_excel_instances()
+            self.close_excel_instances()
             
             # First make a clean copy of the original file
-            temp_copy = create_verified_copy(original_file)
-            self._temp_files.append(temp_copy)
+            temp_copy = self._create_verified_copy(original_file)
             
             # ENHANCEMENT: Create a fresh, validated workbook rather than modifying the original
             self._update_progress(10, "Creating fresh workbook...")
@@ -132,7 +211,7 @@ class ExcelProcessor:
             
             if success:
                 self._update_progress(95, "Validating final workbook...")
-                if validate_excel_file(new_file):
+                if self._validate_excel_file(new_file):
                     self._update_progress(100, "Processing complete")
                     self._update_status(f"Successfully created and processed: {new_file}")
                     if self.queue:
@@ -154,7 +233,7 @@ class ExcelProcessor:
                 return self._process_with_legacy_method(original_file, new_file, password)
                 
         except Exception as e:
-            logger.error("Processing failed", exc_info=True)
+            self.logger.error("Processing failed", exc_info=True)
             if self.queue:
                 self.queue.put(("error", str(e)))
             return False
@@ -162,47 +241,131 @@ class ExcelProcessor:
             # Final cleanup
             self._cleanup_temp_files()
     
-    def _validate_file(self, file_path: str) -> None:
+    def _create_verified_copy(self, original_file: str) -> str:
         """
-        Validate the input file path.
+        Create a verified copy of the original file to prevent corruption.
         
         Args:
-            file_path: Path to Excel file
-        
-        Raises:
-            ValueError: If file validation fails
-        """
-        if not os.path.exists(file_path):
-            raise ValueError(f"File does not exist: {file_path}")
-        if not file_path.lower().endswith('.xlsx'):
-            raise ValueError("File must be an Excel (.xlsx) file")
-    
-    def _generate_new_filename(self, original_file: str) -> str:
-        """
-        Generate the new filename based on the original.
-        
-        Args:
-            original_file: Original file path
-        
+            original_file: Path to original Excel file
+            
         Returns:
-            str: New file path
+            str: Path to verified copy
         """
-        # Get original file basename without extension
-        original_basename = Path(original_file).stem
+        temp_copy = self._get_temp_file_path("verified_copy")
+        self._update_status(f"Creating verified copy at {temp_copy}...")
         
-        # Create output directory if it doesn't exist
-        output_dir = Path(self.config.output_directory)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        # Use native Excel to create a clean copy (most reliable method)
+        try:
+            if WINDOWS_COM_AVAILABLE:
+                # Start Excel
+                pythoncom.CoInitialize()
+                excel = win32com.client.Dispatch("Excel.Application")
+                excel.Visible = False
+                excel.DisplayAlerts = False
+                
+                # Open workbook with recovery options
+                wb = excel.Workbooks.Open(
+                    original_file,
+                    UpdateLinks=0,
+                    ReadOnly=True,
+                    CorruptLoad=2  # xlRepairFile (better corruption handling)
+                )
+                
+                # Save as a new clean file
+                wb.SaveAs(
+                    temp_copy,
+                    FileFormat=51,  # xlOpenXMLWorkbook
+                    CreateBackup=False
+                )
+                
+                # Clean close
+                wb.Close(SaveChanges=False)
+                excel.Quit()
+                
+                # Force cleanup
+                del wb
+                del excel
+                gc.collect()
+                pythoncom.CoUninitialize()
+                
+                # Verify file exists and has content
+                if not os.path.exists(temp_copy) or os.path.getsize(temp_copy) == 0:
+                    raise ValueError("Failed to create valid copy")
+                    
+                return temp_copy
+            else:
+                # If COM is not available, use regular copy
+                shutil.copy2(original_file, temp_copy)
+                return temp_copy
+                
+        except Exception as e:
+            self.logger.warning(f"COM copy failed: {e}, falling back to direct copy")
+            
+            # Fallback to direct copy
+            shutil.copy2(original_file, temp_copy)
+            return temp_copy
+    
+    def _validate_excel_file(self, file_path: str) -> bool:
+        """
+        Validate an Excel file by trying to open it and check for errors.
         
-        # Create a descriptive filename with timestamp
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        new_filename = f"{original_basename}_processed_{timestamp}.xlsx"
-        
-        # Construct full path
-        new_path = output_dir / new_filename
-        
-        self._update_status(f"Generated output filename: {new_path}")
-        return str(new_path.absolute())
+        Args:
+            file_path: Path to Excel file to validate
+            
+        Returns:
+            bool: Whether the file is valid
+        """
+        try:
+            # Method 1: Try opening with openpyxl
+            if OPENPYXL_AVAILABLE:
+                wb = openpyxl.load_workbook(file_path, read_only=True)
+                wb.close()
+            
+            # Method 2: Verify with Excel COM if possible
+            if WINDOWS_COM_AVAILABLE:
+                # Initialize COM
+                pythoncom.CoInitialize()
+                
+                # Start Excel
+                excel = win32com.client.Dispatch("Excel.Application")
+                excel.Visible = False
+                excel.DisplayAlerts = False
+                
+                try:
+                    # Try to open the file
+                    wb = excel.Workbooks.Open(
+                        file_path,
+                        UpdateLinks=0,
+                        ReadOnly=True
+                    )
+                    
+                    # Check if there are any error messages
+                    has_errors = excel.ErrorCheckingStatus if hasattr(excel, 'ErrorCheckingStatus') else False
+                    
+                    # Close without saving
+                    wb.Close(SaveChanges=False)
+                    excel.Quit()
+                    
+                    # Cleanup COM objects
+                    del wb
+                    del excel
+                    gc.collect()
+                    pythoncom.CoUninitialize()
+                    
+                    if has_errors:
+                        self.logger.warning(f"Excel detected errors in {file_path}")
+                        return False
+                        
+                except Exception as e:
+                    self.logger.warning(f"COM validation failed: {e}")
+                    return False
+                    
+            # If we got here, file seems valid
+            return True
+            
+        except Exception as e:
+            self.logger.warning(f"File validation failed: {e}")
+            return False
     
     def _process_with_fresh_workbook(self, source_file: str, output_file: str, password: str) -> bool:
         """
@@ -220,13 +383,16 @@ class ExcelProcessor:
             self._update_status("Loading source workbook data...")
             
             # Load source workbook
-            source_wb = openpyxl.load_workbook(source_file, data_only=True)
-            
-            if self.config.sheet_name not in source_wb.sheetnames:
-                logger.warning(f"Required sheet '{self.config.sheet_name}' not found")
+            if not OPENPYXL_AVAILABLE:
                 return False
                 
-            source_sheet = source_wb[self.config.sheet_name]
+            source_wb = openpyxl.load_workbook(source_file, data_only=True)
+            
+            if self.sheet_name not in source_wb.sheetnames:
+                self.logger.warning(f"Required sheet '{self.sheet_name}' not found")
+                return False
+                
+            source_sheet = source_wb[self.sheet_name]
             
             # Create a new workbook
             self._update_status("Creating fresh workbook...")
@@ -237,7 +403,7 @@ class ExcelProcessor:
                 new_wb.remove(new_wb["Sheet"])
                 
             # Create new sheet with the right name
-            new_sheet = new_wb.create_sheet(title=self.config.sheet_name)
+            new_sheet = new_wb.create_sheet(title=self.sheet_name)
             
             # Copy all data and formatting from source
             self._update_status("Copying data from source...")
@@ -282,7 +448,7 @@ class ExcelProcessor:
             return True
             
         except Exception as e:
-            logger.error(f"Error in fresh workbook processing: {e}", exc_info=True)
+            self.logger.error(f"Error in fresh workbook processing: {e}", exc_info=True)
             return False
     
     def _copy_sheet_data(self, source_sheet, target_sheet):
@@ -333,7 +499,7 @@ class ExcelProcessor:
                 tgt_cell = target_sheet.cell(row=row_idx, column=col_idx, value=src_cell.value)
                 
                 # Copy basic formatting with proper error handling
-                if src_cell.has_style:
+                if hasattr(src_cell, 'has_style') and src_cell.has_style:
                     try:
                         # Font
                         tgt_cell.font = Font(
@@ -344,7 +510,7 @@ class ExcelProcessor:
                             color=src_cell.font.color
                         )
                     except Exception as e:
-                        logger.debug(f"Error copying font at {row_idx},{col_idx}: {e}")
+                        self.logger.debug(f"Error copying font at {row_idx},{col_idx}: {e}")
                     
                     try:
                         # Fill - with proper Color object creation
@@ -357,7 +523,7 @@ class ExcelProcessor:
                                 start_color=color_obj
                             )
                     except Exception as e:
-                        logger.debug(f"Error copying fill at {row_idx},{col_idx}: {e}")
+                        self.logger.debug(f"Error copying fill at {row_idx},{col_idx}: {e}")
                     
                     try:
                         # Border
@@ -369,7 +535,7 @@ class ExcelProcessor:
                                 bottom=src_cell.border.bottom
                             )
                     except Exception as e:
-                        logger.debug(f"Error copying border at {row_idx},{col_idx}: {e}")
+                        self.logger.debug(f"Error copying border at {row_idx},{col_idx}: {e}")
                     
                     try:
                         # Alignment
@@ -380,9 +546,7 @@ class ExcelProcessor:
                                 wrap_text=src_cell.alignment.wrap_text
                             )
                     except Exception as e:
-                        logger.debug(f"Error copying alignment at {row_idx},{col_idx}: {e}")
-        
-        # We'll deliberately NOT copy merged cells to avoid potential corruption
+                        self.logger.debug(f"Error copying alignment at {row_idx},{col_idx}: {e}")
     
     def _repair_workbook(self, file_path: str) -> bool:
         """
@@ -395,27 +559,55 @@ class ExcelProcessor:
             bool: Whether repair was successful
         """
         try:
-            self._update_status("Attempting to repair workbook...")
+            # Use the excel_recovery module if available
+            try:
+                from ..modules.excel_recovery import repair_excel_file_access
+                success, result_path = repair_excel_file_access(file_path)
+                if success and os.path.exists(result_path):
+                    # Replace the original file with the repaired one
+                    shutil.copy2(result_path, file_path)
+                    return True
+            except ImportError:
+                self.logger.warning("Excel recovery module not available")
             
-            # Create a backup before repair
-            backup_path = create_backup_file(file_path, self.config.backup_directory)
+            # Method 1: Try pandas-based repair as fallback
+            try:
+                if PANDAS_AVAILABLE:
+                    self._update_status("Attempting pandas-based repair...")
+                    
+                    # Read all sheets with pandas
+                    excel_file = pd.ExcelFile(file_path)
+                    sheet_names = excel_file.sheet_names
+                    
+                    # Create a new Excel writer
+                    repaired_path = self._get_temp_file_path("pandas_repaired")
+                    writer = pd.ExcelWriter(repaired_path, engine='openpyxl')
+                    
+                    # Copy each sheet
+                    for sheet_name in sheet_names:
+                        df = pd.read_excel(file_path, sheet_name=sheet_name)
+                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    
+                    # Save the writer
+                    writer.close()
+                    
+                    # Replace original with repaired version
+                    if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                        if os.path.exists(file_path):
+                            os.unlink(file_path)
+                        shutil.copy2(repaired_path, file_path)
+                        return True
+            except Exception as e:
+                self.logger.warning(f"Pandas repair failed: {e}")
             
-            from ..modules.excel_recovery import repair_workbook
-            repaired = repair_workbook(file_path)
-            
-            if not repaired:
-                # If all repair methods failed, restore from backup
-                self._update_status("Restoration from backup...")
-                if os.path.exists(backup_path):
-                    shutil.copy2(backup_path, file_path)
-            
-            return repaired
+            # If all repair methods failed, return False
+            return False
             
         except Exception as e:
-            logger.error(f"Repair process failed: {e}")
+            self.logger.error(f"Repair process failed: {e}")
             return False
     
-    def _process_with_legacy_method(self, original_file: str, new_file: str, password: str) -> bool:
+    def _process_with_legacy_method(self, original_file: str, new_file: str, password: str = None) -> bool:
         """
         Process using the legacy method as a fallback.
         
@@ -439,87 +631,31 @@ class ExcelProcessor:
                         self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
                     return True
                 else:
-                    self._update_status("Direct library processing failed, falling back to COM methods...")
+                    self._update_status("Direct library processing failed, falling back to basic copy...")
             except Exception as e:
-                logger.warning(f"Direct library processing failed: {e}")
-                self._update_status("Falling back to COM methods...")
+                self.logger.warning(f"Direct library processing failed: {e}")
+                self._update_status("Falling back to basic file copy...")
             
-            # Fall back to original COM processing approach
+            # Very simple fallback - just make a copy
             try:
-                from ..modules.com_operations import (
-                    create_clean_copy,
-                    process_workbook_with_com
-                )
-                
-                # First make a copy of the original file - using more reliable file system operations
                 self._update_progress(10, f"Creating new workbook at {new_file}...")
-                if self.excel_config.use_com_for_copy:
-                    # Try COM approach first, but fall back to direct copy if it fails
-                    success = create_clean_copy(original_file, new_file)
-                    if not success:
-                        self._update_status("Falling back to direct file copy...")
-                        self._direct_file_copy(original_file, new_file)
-                else:
-                    # Use direct file copy without COM (more reliable)
-                    self._direct_file_copy(original_file, new_file)
+                shutil.copy2(original_file, new_file)
                 
-                self._update_progress(20, "Processing Excel file...")
-                process_workbook_with_com(new_file, password, self.config, self.update_progress, self.update_status)
-                
-                # Final verification and notification
-                if os.path.exists(new_file):
-                    self._update_status(f"Successfully created and processed: {new_file}")
-                    if self.queue:
-                        self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
-                    return True
-                else:
-                    raise FileNotFoundError(f"Expected output file not found: {new_file}")
+                self._update_progress(100, "Processing complete (basic copy only)")
+                self._update_status(f"Successfully created copy: {new_file}")
+                if self.queue:
+                    self.queue.put(("success", f"File copied successfully. Output saved to: {new_file}"))
+                return True
             except Exception as e:
-                logger.error(f"COM processing failed: {str(e)}", exc_info=True)
+                self.logger.error(f"Basic copy failed: {str(e)}", exc_info=True)
                 if self.queue:
                     self.queue.put(("error", f"Processing failed: {str(e)}"))
                 return False
                 
         except Exception as e:
-            logger.error("Processing failed", exc_info=True)
+            self.logger.error("Processing failed", exc_info=True)
             if self.queue:
                 self.queue.put(("error", str(e)))
-            return False
-
-    def _direct_file_copy(self, source_file: str, dest_file: str) -> bool:
-        """
-        Perform a direct file copy without using COM.
-        This is more reliable when COM operations fail.
-        
-        Args:
-            source_file: Source file path
-            dest_file: Destination file path
-            
-        Returns:
-            bool: Whether the copy was successful
-        """
-        try:
-            self._update_status(f"Directly copying file from {source_file} to {dest_file}...")
-            
-            # Ensure the destination directory exists
-            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-            
-            # Make a direct copy of the file
-            shutil.copy2(source_file, dest_file)
-            
-            # Verify the copy succeeded
-            if not os.path.exists(dest_file):
-                raise IOError(f"Failed to copy file to {dest_file}")
-            
-            file_size = os.path.getsize(dest_file)
-            if file_size == 0:
-                raise IOError(f"Copied file has zero size: {dest_file}")
-                
-            self._update_status(f"Direct file copy successful ({file_size} bytes)")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error during direct file copy: {str(e)}", exc_info=True)
             return False
     
     def _process_with_libraries(self, original_file: str, output_file: str, password: str) -> bool:
@@ -534,6 +670,10 @@ class ExcelProcessor:
         Returns:
             bool: True if processing was successful, False otherwise
         """
+        if not OPENPYXL_AVAILABLE:
+            self.logger.warning("openpyxl not available, cannot process with libraries")
+            return False
+            
         try:
             self._update_status(f"Loading file with pandas/openpyxl: {original_file}")
             
@@ -547,11 +687,11 @@ class ExcelProcessor:
             self._update_status("Loading workbook with openpyxl...")
             wb = openpyxl.load_workbook(output_file, data_only=True)
             
-            if self.config.sheet_name not in wb.sheetnames:
-                logger.warning(f"Required sheet '{self.config.sheet_name}' not found")
+            if self.sheet_name not in wb.sheetnames:
+                self.logger.warning(f"Required sheet '{self.sheet_name}' not found")
                 return False
             
-            sheet = wb[self.config.sheet_name]
+            sheet = wb[self.sheet_name]
             
             # Unprotect sheet if password provided
             if password:
@@ -560,9 +700,6 @@ class ExcelProcessor:
             
             self._update_progress(30, "Processing columns...")
             self._process_columns(sheet)
-            
-            self._update_progress(50, "Processing merged cells...")
-            self._process_merged_cells(sheet)
             
             self._update_progress(60, "Finding column indexes...")
             column_indexes = self._find_column_indexes(sheet)
@@ -587,25 +724,10 @@ class ExcelProcessor:
             return True
                 
         except Exception as e:
-            logger.warning(f"Library-based processing failed: {str(e)}")
+            self.logger.warning(f"Library-based processing failed: {str(e)}")
             return False
-    
-    def _unprotect_sheet(self, sheet: openpyxl.worksheet.worksheet.Worksheet, password: str) -> None:
-        """
-        Unprotect worksheet with password.
-        
-        Args:
-            sheet: Worksheet to unprotect
-            password: Protection password
-        """
-        if password:
-            try:
-                sheet.protection.set_password(password)
-                sheet.protection.sheet = False
-            except Exception as e:
-                raise ValueError(f"Failed to unprotect sheet: {str(e)}")
-    
-    def _process_columns(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
+            
+    def _process_columns(self, sheet) -> None:
         """
         Process and unhide all columns in worksheet.
         
@@ -616,18 +738,23 @@ class ExcelProcessor:
             col_letter = get_column_letter(col)
             sheet.column_dimensions[col_letter].hidden = False
     
-    def _process_merged_cells(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
+    def _unprotect_sheet(self, sheet, password: str) -> None:
         """
-        Unmerge all merged cells in worksheet.
+        Unprotect worksheet with password.
         
         Args:
-            sheet: Worksheet to process
+            sheet: Worksheet to unprotect
+            password: Protection password
         """
-        merged_ranges = list(sheet.merged_cells.ranges)
-        for merged_range in merged_ranges:
-            sheet.unmerge_cells(str(merged_range))
+        if password:
+            try:
+                if hasattr(sheet.protection, 'set_password'):
+                    sheet.protection.set_password(password)
+                sheet.protection.sheet = False
+            except Exception as e:
+                self.logger.warning(f"Failed to unprotect sheet: {e}")
     
-    def _find_column_indexes(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> Dict[str, int]:
+    def _find_column_indexes(self, sheet) -> Dict[str, int]:
         """
         Find column indexes for required headers.
         
@@ -638,15 +765,23 @@ class ExcelProcessor:
             Dict[str, int]: Mapping of header names to column indexes
         """
         column_indexes = {}
-        for cell in sheet[self.config.header_row]:
-            if cell.value in self.config.headers_to_find:
+        
+        # Set up default headers if not already specified
+        headers_to_find = getattr(self, 'headers_to_find', DEFAULT_HEADERS_TO_FIND)
+        header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
+        
+        # Find all headers
+        for cell in sheet[header_row]:
+            if cell.value in headers_to_find:
                 column_indexes[cell.value] = cell.column
-        missing_headers = set(self.config.headers_to_find) - set(column_indexes.keys())
-        if missing_headers:
-            raise ValueError(f"Missing headers: {', '.join(missing_headers)}")
+                
+        # Check if we found all required headers
+        if len(column_indexes) < len(headers_to_find):
+            self.logger.warning(f"Not all required headers found. Found: {list(column_indexes.keys())}")
+            
         return column_indexes
     
-    def _process_header_formatting(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> str:
+    def _process_header_formatting(self, sheet) -> str:
         """
         Process header cell formatting and return RGB color.
         
@@ -656,20 +791,32 @@ class ExcelProcessor:
         Returns:
             str: RGB color value
         """
-        header_cell = sheet.cell(row=self.config.header_row, column=1)
-        fill_color = header_cell.fill.start_color.index
+        header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
+        header_cell = sheet.cell(row=header_row, column=1)
         
+        # Default to white if no fill
+        if not hasattr(header_cell, 'fill') or not header_cell.fill:
+            return "FFFFFF"
+            
+        # Extract fill color
+        fill_color = getattr(header_cell.fill.start_color, 'index', "FFFFFF")
+        
+        # Convert index to RGB if needed
         if isinstance(fill_color, int):
             fill_color = f"{fill_color:06X}"
-        if fill_color in COLOR_INDEX:
+            
+        # Handle color index
+        rgb_color = fill_color
+        if hasattr(COLOR_INDEX, '__contains__') and int(fill_color, 16) in COLOR_INDEX:
             rgb_color = COLOR_INDEX[int(fill_color, 16)]
-        else:
-            rgb_color = fill_color
-        if not rgb_color.startswith('FF') and len(rgb_color) == 8:
+            
+        # Clean up color format
+        if isinstance(rgb_color, str) and len(rgb_color) == 8 and rgb_color.startswith('FF'):
             rgb_color = rgb_color[2:]
+            
         return rgb_color
     
-    def _find_matching_row(self, sheet: openpyxl.worksheet.worksheet.Worksheet, rgb_color: str) -> int:
+    def _find_matching_row(self, sheet, rgb_color: str) -> int:
         """
         Find first row matching header color.
         
@@ -680,23 +827,43 @@ class ExcelProcessor:
         Returns:
             int: Matching row number
         """
-        for row in sheet.iter_rows(min_row=self.config.header_row + 1):
+        header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
+        
+        for row in sheet.iter_rows(min_row=header_row + 1):
             cell = row[0]
-            cell_fill_color = cell.fill.start_color.index
             
+            # Skip cells without fill
+            if not hasattr(cell, 'fill') or not cell.fill:
+                continue
+                
+            # Get cell fill color
+            cell_fill_color = getattr(cell.fill.start_color, 'index', None)
+            
+            # Skip cells without fill color
+            if not cell_fill_color:
+                continue
+                
+            # Convert to RGB
             if isinstance(cell_fill_color, int):
                 cell_fill_color = f"{cell_fill_color:06X}"
-            if cell_fill_color in COLOR_INDEX:
+                
+            # Handle color index
+            cell_rgb_color = cell_fill_color
+            if hasattr(COLOR_INDEX, '__contains__') and int(cell_fill_color, 16) in COLOR_INDEX:
                 cell_rgb_color = COLOR_INDEX[int(cell_fill_color, 16)]
-            else:
-                cell_rgb_color = cell_fill_color
-            if not cell_rgb_color.startswith('FF') and len(cell_rgb_color) == 8:
+                
+            # Clean up color format
+            if isinstance(cell_rgb_color, str) and len(cell_rgb_color) == 8 and cell_rgb_color.startswith('FF'):
                 cell_rgb_color = cell_rgb_color[2:]
+                
+            # Compare colors
             if cell_rgb_color == rgb_color:
                 return cell.row
+                
+        # If no matching row found, return max row
         return sheet.max_row
     
-    def _add_do_comments_column(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
+    def _add_do_comments_column(self, sheet) -> None:
         """
         Add and format DO Comments column.
         
@@ -704,8 +871,13 @@ class ExcelProcessor:
             sheet: Worksheet to process
         """
         last_col = sheet.max_column
-        new_header_cell = sheet.cell(row=self.config.header_row, column=last_col + 1)
+        header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
+        
+        # Create the header cell
+        new_header_cell = sheet.cell(row=header_row, column=last_col + 1)
         new_header_cell.value = "DO Comments"
+        
+        # Format the header cell
         new_header_cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
         new_header_cell.font = Font(color="FF0000", bold=True, size=11, name="Calibri")
         new_header_cell.border = Border(
@@ -713,21 +885,18 @@ class ExcelProcessor:
             right=Side(style='thin'),
             top=Side(style='thin'),
             bottom=Side(style='thin')
-                    )
+        )
         new_header_cell.alignment = Alignment(
             horizontal='center',
             vertical='center',
             wrap_text=True
         )
+        
+        # Set column width
         col_letter = get_column_letter(last_col + 1)
         sheet.column_dimensions[col_letter].width = 25
     
-    def _process_rows_with_openpyxl(
-        self,
-        sheet: openpyxl.worksheet.worksheet.Worksheet,
-        column_indexes: Dict[str, int],
-        matching_row: int
-    ) -> None:
+    def _process_rows_with_openpyxl(self, sheet, column_indexes: Dict[str, int], matching_row: int) -> None:
         """
         Process individual rows with openpyxl.
         
@@ -739,8 +908,17 @@ class ExcelProcessor:
         last_col = sheet.max_column
         comment_col = last_col
         processed_count = 0
+        header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
         
-        for row in range(self.config.header_row + 1, matching_row):
+        # Check if we have required columns
+        required_columns = ["Difference", "Include in CFO Cert Letter", "Explanation"]
+        missing_columns = [col for col in required_columns if col not in column_indexes]
+        
+        if missing_columns:
+            self.logger.warning(f"Missing required columns: {missing_columns}")
+            return
+            
+        for row in range(header_row + 1, matching_row):
             try:
                 difference_cell = sheet.cell(row=row, column=column_indexes["Difference"])
                 include_cfo_cell = sheet.cell(row=row, column=column_indexes["Include in CFO Cert Letter"])
@@ -771,3 +949,61 @@ class ExcelProcessor:
                 self._update_status(f"Error processing row {row}: {str(e)}")
         
         self._update_status(f"Successfully processed {processed_count} rows")
+    
+    def _validate_file(self, file_path: str) -> None:
+        """
+        Validate the input file path.
+        
+        Args:
+            file_path: Path to Excel file
+        
+        Raises:
+            ValueError: If file validation fails
+        """
+        if not os.path.exists(file_path):
+            raise ValueError(f"File does not exist: {file_path}")
+        if not file_path.lower().endswith('.xlsx'):
+            raise ValueError("File must be an Excel (.xlsx) file")
+    
+    def _generate_new_filename(self, original_file: str) -> str:
+        """
+        Generate the new filename based on the original.
+        
+        Args:
+            original_file: Original file path
+        
+        Returns:
+            str: New file path
+        """
+        # Get original file basename without extension
+        original_basename = Path(original_file).stem
+        
+        # Create output directory if it doesn't exist
+        output_dir = Path(self.output_directory)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create a descriptive filename with timestamp
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        new_filename = f"{original_basename}_processed_{timestamp}.xlsx"
+        
+        # Construct full path
+        new_path = output_dir / new_filename
+        
+        self._update_status(f"Generated output filename: {new_path}")
+        return str(new_path.absolute())
+    
+    def _get_temp_file_path(self, prefix: str = "excel") -> str:
+        """
+        Generate a temporary file path.
+        
+        Args:
+            prefix: Prefix for temporary file
+            
+        Returns:
+            str: Temporary file path
+        """
+        temp_dir = tempfile.gettempdir()
+        unique_id = str(uuid.uuid4())
+        temp_file = os.path.join(temp_dir, f"{prefix}_temp_{unique_id}.xlsx")
+        self._temp_files.append(temp_file)  # Track for cleanup
+        return temp_file

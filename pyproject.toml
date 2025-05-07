@@ -20,9 +20,17 @@ dependencies = [
     "openpyxl>=3.0.0",
     "pandas>=1.0.0",
     "psutil",
-    "pywin32;platform_system=='Windows'",
+    "pywin32;platform_system=='Windows'",  # Note: This app requires Windows to function fully
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+]
+
+# The application requires Windows to function properly
 [project.scripts]
 sf132-sf133-recon = "sf132_sf133_recon.main:main"
 
