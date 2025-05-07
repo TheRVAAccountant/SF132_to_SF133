@@ -23,6 +23,7 @@ import pandas as pd
 from openpyxl.utils.exceptions import InvalidFileException
 from config import app_config
 from excel_processor_config import ProcessingConfig, FileHandlingConfig, ExcelConfig
+from excel_data_cleaner import ExcelDataCleaner, clean_excel_external_data
 
 # Use the detailed configuration from excel_processor_config.py
 DEFAULT_PROCESSING_CONFIG = ProcessingConfig()
@@ -1029,22 +1030,33 @@ class ExcelProcessor:
             excel: Excel application COM object
         """
         try:
-            # Break links to external sources
-            self._update_status("Breaking links to external sources...")
+            # Initialize the specialized external data cleaner
+            data_cleaner = ExcelDataCleaner(self.logger)
             
-            # Try to break external links
+            self._update_status("Cleaning external data connections...")
+            
+            # Use the specialized sheet cleaning method for each sheet
+            for i in range(1, wb.Sheets.Count + 1):
+                try:
+                    sheet = wb.Sheets(i)
+                    data_cleaner._clean_sheet_data(sheet)
+                except Exception as e:
+                    self.logger.warning(f"Error cleaning sheet {i}: {e}")
+            
+            # Clean general workbook connections
             try:
-                wb.BreakLink(Name="", Type=1)  # Type 1 = xlExcelLinks
-            except:
-                pass
-                
-            # Remove external data ranges/connections
-            try:
-                # Check if there are connections to remove
+                # Break external links
+                for link_type in [1, 2, 5, 6]:  # Different types of links
+                    try:
+                        self._update_status(f"Breaking links of type {link_type}...")
+                        wb.BreakLink(Name="", Type=link_type)
+                    except:
+                        pass
+                    
+                # Remove connections
                 if hasattr(wb, 'Connections') and wb.Connections.Count > 0:
                     self._update_status(f"Removing {wb.Connections.Count} external connections...")
                     
-                    # Get all connection names first (because removing changes the collection)
                     conn_names = []
                     for i in range(1, wb.Connections.Count + 1):
                         try:
@@ -1052,49 +1064,38 @@ class ExcelProcessor:
                         except:
                             pass
                     
-                    # Now remove each connection
                     for name in conn_names:
                         try:
                             wb.Connections(name).Delete()
                         except Exception as e:
                             self.logger.warning(f"Failed to remove connection {name}: {e}")
-            except Exception as e:
-                self.logger.warning(f"Error cleaning connections: {e}")
                 
-            # Clean up data ranges
-            try:
-                for sheet in wb.Sheets:
-                    try:
-                        # Check if the sheet has QueryTables
-                        if hasattr(sheet, 'QueryTables') and sheet.QueryTables.Count > 0:
-                            self._update_status(f"Removing query tables from sheet: {sheet.Name}")
-                            
-                            # Delete all QueryTables
-                            for i in range(sheet.QueryTables.Count, 0, -1):
-                                try:
-                                    sheet.QueryTables(i).Delete()
-                                except:
-                                    pass
-                    except:
-                        pass
+                # Commit connection changes
+                try:
+                    if hasattr(wb, 'Connections'):
+                        wb.Connections.CommitAll()
+                except:
+                    pass
                     
-                    # Also handle ListObjects (tables) with external data
-                    try:
-                        if hasattr(sheet, 'ListObjects') and sheet.ListObjects.Count > 0:
-                            for i in range(sheet.ListObjects.Count, 0, -1):
-                                try:
-                                    table = sheet.ListObjects(i)
-                                    if hasattr(table, 'QueryTable'):
-                                        table.QueryTable.Delete()
-                                except:
-                                    pass
-                    except:
-                        pass
             except Exception as e:
-                self.logger.warning(f"Error cleaning data ranges: {e}")
+                self.logger.warning(f"Error cleaning workbook connections: {e}")
                 
         except Exception as e:
             self.logger.warning(f"Error during connection cleanup: {e}")
+
+    # Add a new method to perform complete external data cleaning
+    def _perform_external_data_cleanup(self, file_path: str) -> bool:
+        """
+        Performs a specialized cleanup of all external data references.
+        
+        Args:
+            file_path (str): Path to the Excel file
+            
+        Returns:
+            bool: Success status
+        """
+        self._update_status("Performing specialized external data cleanup...")
+        return clean_excel_external_data(file_path, self.logger)
     
     def _process_workbook(self, file_path: str, password: str) -> None:
         """
@@ -1105,6 +1106,10 @@ class ExcelProcessor:
             password (str): Sheet protection password
         """
         try:
+            # Run external data cleanup early in the process
+            self._update_progress(5, "Pre-cleaning external data references...")
+            self._perform_external_data_cleanup(file_path)
+            
             # Load workbook with proper error handling
             self._update_status(f"Loading workbook: {file_path}")
             wb = self._load_workbook_safely(file_path)
@@ -1139,6 +1144,10 @@ class ExcelProcessor:
             self._update_status("Initial save with content changes...")
             self._save_workbook_safely(wb, file_path)
             
+            # Clean up external references again before final save
+            self._update_status("Cleaning external references...")
+            self._perform_external_data_cleanup(file_path)
+            
             # Then perform a special "clean" save to fix any potential corruption
             self._update_status("Cleaning and finalizing workbook...")
             self._final_clean_save(file_path)
@@ -1164,73 +1173,36 @@ class ExcelProcessor:
         # Get a new temporary filename for the cleaned version
         clean_file = self._get_temp_file_path("clean")
         
-        # ENHANCEMENT: Instead of just using COM, do a more thorough validation and repair
-        success = False
+        # First perform specialized external data cleanup
+        self._update_status("Running comprehensive external data cleanup...")
+        self._perform_external_data_cleanup(file_path)
         
-        # Method 1: Try Excel's repair functionality first
-        if self.excel_config.use_com_for_final_save and self.excel_config.enable_com:
-            try:
-                self._update_status("Using Excel's repair functionality...")
-                
-                # Initialize COM
-                pythoncom.CoInitialize()
-                
-                # Start Excel
-                excel = win32com.client.Dispatch("Excel.Application")
-                excel.Visible = False
-                excel.DisplayAlerts = False
-                excel.EnableEvents = False
-                
-                # Set calculation to manual to avoid recalculation issues
-                excel.Calculation = -4135  # xlCalculationManual
-                
-                # Open with repair option
-                wb = excel.Workbooks.Open(
-                    file_path,
-                    UpdateLinks=0,
-                    CorruptLoad=2  # xlRepairFile - repair mode
-                )
-                
-                # Calculate once to ensure data is current
-                wb.Calculate()
-                
-                # Save to clean file
-                wb.SaveAs(
-                    clean_file,
-                    FileFormat=51,  # xlOpenXMLWorkbook
-                    CreateBackup=False
-                )
-                
-                # Close workbook and Excel
-                wb.Close(SaveChanges=False)
-                excel.Quit()
-                
-                # Cleanup COM objects
-                del wb
-                del excel
-                gc.collect()
-                pythoncom.CoUninitialize()
-                
-                # Replace original with cleaned version if successful
-                if os.path.exists(clean_file) and os.path.getsize(clean_file) > 0:
-                    if os.path.exists(file_path):
-                        os.unlink(file_path)
-                    shutil.copy2(clean_file, file_path)
-                    success = True
-                    self._update_status("Excel repair functionality applied successfully")
-            except Exception as e:
-                self.logger.warning(f"Excel repair failed: {e}")
-        
-        # Method 2: If COM approach failed, try openpyxl
-        if not success:
+        # Try using Excel COM to save a clean version if enabled
+        if self.excel_config.use_com_for_final_save:
+            success = self._save_with_excel_com(file_path, clean_file, preserve_all=False)
+        else:
+            success = False
+            
+        if success and os.path.exists(clean_file):
+            # Replace the original with the cleaned version
+            if os.path.exists(file_path):
+                os.unlink(file_path)  # Remove existing file
+            shutil.move(clean_file, file_path)
+            
+            # Run one more external data cleanup on the final file
+            self._perform_external_data_cleanup(file_path)
+            self._update_status("Final clean save completed successfully")
+        else:
+            # If COM approach failed, ensure we still have a working file
             self._update_status("Using openpyxl for final save...")
             
             try:
-                # Load and save with openpyxl
-                wb = openpyxl.load_workbook(file_path, data_only=True)
+                # Load and save with openpyxl as fallback
+                wb = openpyxl.load_workbook(file_path)
                 
-                # ENHANCEMENT: Ensure all merged cells are properly formed
-                self._fix_merged_cells(wb)
+                # Clean external references with openpyxl
+                cleaner = ExcelDataCleaner(self.logger)
+                cleaner.clean_external_references_openpyxl(wb)
                 
                 wb.save(clean_file)
                 wb.close()
@@ -1238,8 +1210,7 @@ class ExcelProcessor:
                 if os.path.exists(clean_file) and os.path.getsize(clean_file) > 0:
                     if os.path.exists(file_path):
                         os.unlink(file_path)
-                    shutil.copy2(clean_file, file_path)
-                    success = True
+                    shutil.move(clean_file, file_path)
                     self._update_status("Final openpyxl save completed successfully")
                 else:
                     raise IOError("Failed to save with openpyxl")
@@ -1256,16 +1227,6 @@ class ExcelProcessor:
         # Final verification of output file
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             self._update_status(f"Final file size: {os.path.getsize(file_path)} bytes")
-            
-            # ENHANCEMENT: Final validation
-            if self._validate_excel_file(file_path):
-                self._update_status("Final validation successful")
-            else:
-                self._update_status("Warning: Final validation detected potential issues")
-                # Restore from backup if needed
-                if os.path.exists(backup_path) and not success:
-                    self._update_status("Restoring from backup...")
-                    shutil.copy2(backup_path, file_path)
         else:
             # If we somehow lost the file, restore from backup
             self._update_status("Output file missing or corrupted, restoring from backup...")
