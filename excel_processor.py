@@ -19,6 +19,8 @@ import gc
 import pythoncom
 import contextlib
 import subprocess
+import pandas as pd
+from openpyxl.utils.exceptions import InvalidFileException
 from config import app_config
 from excel_processor_config import ProcessingConfig, FileHandlingConfig, ExcelConfig
 
@@ -33,7 +35,7 @@ class ExcelProcessor:
     formatting, and content analysis.
     """
     
-    def __init__(self, queue: Queue):
+    def __init__(self, queue: Queue = None):
         """
         Initialize the Excel processor.
         
@@ -74,7 +76,8 @@ class ExcelProcessor:
             value (float): Progress value (0-100)
             message (str): Status message
         """
-        self.queue.put(("progress", (value, message)))
+        if self.queue:
+            self.queue.put(("progress", (value, message)))
         self.logger.info(message)
     
     def _update_status(self, message: str):
@@ -84,7 +87,8 @@ class ExcelProcessor:
         Args:
             message (str): Status message
         """
-        self.queue.put(("status", message))
+        if self.queue:
+            self.queue.put(("status", message))
         self.logger.info(message)
     
     def close_excel_instances(self):
@@ -129,13 +133,16 @@ class ExcelProcessor:
         else:
             self._update_status("All Excel processes successfully closed")
 
-    def process_file(self, original_file: str, password: str) -> None:
+    def process_file(self, original_file: str, password: str = None) -> bool:
         """
         Main processing function for Excel file.
         
         Args:
             original_file (str): Path to original Excel file
             password (str): Sheet protection password
+        
+        Returns:
+            bool: True if processing was successful, False otherwise
         """
         try:
             # Convert to absolute path
@@ -148,32 +155,58 @@ class ExcelProcessor:
             # Ensure Excel is fully closed before starting
             self.close_excel_instances()
             
-            # First make a copy of the original file - using more reliable file system operations
-            self._update_progress(5, f"Creating new workbook at {new_file}...")
-            if self.excel_config.use_com_for_copy:
-                # Try COM approach first, but fall back to direct copy if it fails
-                success = self._create_clean_copy(original_file, new_file)
-                if not success:
-                    self._update_status("Falling back to direct file copy...")
+            # First try to process with pandas/openpyxl directly
+            self._update_progress(5, "Attempting to process file with pandas/openpyxl...")
+            try:
+                success = self._process_with_libraries(original_file, new_file, password)
+                if success:
+                    self._update_progress(90, "Direct library processing successful")
+                    self._update_status(f"Successfully created and processed: {new_file}")
+                    if self.queue:
+                        self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
+                    return True
+                else:
+                    self._update_status("Direct library processing failed, falling back to COM methods...")
+            except Exception as e:
+                self.logger.warning(f"Direct library processing failed: {e}")
+                self._update_status("Falling back to COM methods...")
+            
+            # Fall back to original COM processing approach
+            try:
+                # First make a copy of the original file - using more reliable file system operations
+                self._update_progress(10, f"Creating new workbook at {new_file}...")
+                if self.excel_config.use_com_for_copy:
+                    # Try COM approach first, but fall back to direct copy if it fails
+                    success = self._create_clean_copy(original_file, new_file)
+                    if not success:
+                        self._update_status("Falling back to direct file copy...")
+                        self._direct_file_copy(original_file, new_file)
+                else:
+                    # Use direct file copy without COM (more reliable)
                     self._direct_file_copy(original_file, new_file)
-            else:
-                # Use direct file copy without COM (more reliable)
-                self._direct_file_copy(original_file, new_file)
-            
-            self._update_progress(10, "Processing Excel file...")
-            self._process_workbook(new_file, password)
-            
-            # Final verification and notification
-            if os.path.exists(new_file):
-                self._update_status(f"Successfully created and processed: {new_file}")
-                self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
-            else:
-                raise FileNotFoundError(f"Expected output file not found: {new_file}")
+                
+                self._update_progress(20, "Processing Excel file...")
+                self._process_workbook(new_file, password)
+                
+                # Final verification and notification
+                if os.path.exists(new_file):
+                    self._update_status(f"Successfully created and processed: {new_file}")
+                    if self.queue:
+                        self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
+                    return True
+                else:
+                    raise FileNotFoundError(f"Expected output file not found: {new_file}")
+            except Exception as e:
+                self.logger.error(f"COM processing failed: {str(e)}")
+                if self.queue:
+                    self.queue.put(("error", f"Processing failed: {str(e)}"))
+                return False
                 
         except Exception as e:
             self.logger.error("Processing failed", exc_info=True)
-            self.queue.put(("error", str(e)))
-            raise
+            if self.queue:
+                self.queue.put(("error", str(e)))
+            return False
         finally:
             # Final cleanup
             self._cleanup_temp_files()
@@ -193,6 +226,80 @@ class ExcelProcessor:
         if not file_path.lower().endswith('.xlsx'):
             raise ValueError("File must be an Excel (.xlsx) file")
     
+    def _process_with_libraries(self, original_file: str, output_file: str, password: str) -> bool:
+        """
+        Process Excel file using Python libraries (openpyxl/pandas) instead of COM.
+        
+        Args:
+            original_file (str): Path to original Excel file
+            output_file (str): Path to output file
+            password (str): Sheet protection password
+            
+        Returns:
+            bool: True if processing was successful, False otherwise
+        """
+        try:
+            self._update_status(f"Loading file with pandas/openpyxl: {original_file}")
+            
+            # First try with pandas
+            try:
+                # Create output directory if needed
+                os.makedirs(os.path.dirname(output_file), exist_ok=True)
+                
+                # Copy the file first for safety
+                shutil.copy2(original_file, output_file)
+                
+                # Load workbook with openpyxl
+                self._update_status("Loading workbook with openpyxl...")
+                wb = openpyxl.load_workbook(output_file, data_only=True)
+                
+                if self.config.sheet_name not in wb.sheetnames:
+                    self.logger.warning(f"Required sheet '{self.config.sheet_name}' not found")
+                    return False
+                
+                sheet = wb[self.config.sheet_name]
+                
+                # Unprotect sheet if password provided
+                if password:
+                    self._update_progress(20, "Unprotecting sheet...")
+                    self._unprotect_sheet(sheet, password)
+                
+                self._update_progress(30, "Processing columns...")
+                self._process_columns(sheet)
+                
+                self._update_progress(50, "Processing merged cells...")
+                self._process_merged_cells(sheet)
+                
+                self._update_progress(60, "Finding column indexes...")
+                column_indexes = self._find_column_indexes(sheet)
+                
+                self._update_progress(70, "Processing header formatting...")
+                rgb_color = self._process_header_formatting(sheet)
+                
+                self._update_progress(80, "Finding matching rows...")
+                matching_row = self._find_matching_row(sheet, rgb_color)
+                
+                self._update_progress(85, "Adding DO Comments column...")
+                self._add_do_comments_column(sheet)
+                
+                self._update_progress(90, "Processing rows with comments...")
+                self._process_rows_with_openpyxl(sheet, column_indexes, matching_row)
+                
+                # Save the workbook
+                wb.save(output_file)
+                wb.close()
+                
+                self._update_progress(100, "Processing complete")
+                return True
+                
+            except Exception as e:
+                self.logger.warning(f"Openpyxl processing failed: {str(e)}")
+                return False
+                
+        except Exception as e:
+            self.logger.warning(f"Library-based processing failed: {str(e)}")
+            return False
+        
     def _generate_new_filename(self, original_file: str) -> str:
         """
         Generate the new filename based on the original.
@@ -580,7 +687,8 @@ class ExcelProcessor:
             self._update_progress(100, "Processing complete")
         except Exception as e:
             self.logger.error(f"Error processing workbook: {str(e)}", exc_info=True)
-            self.queue.put(("error", f"Workbook processing failed: {str(e)}"))
+            if self.queue:
+                self.queue.put(("error", f"Workbook processing failed: {str(e)}"))
             raise
     
     def _final_clean_save(self, file_path: str) -> None:
@@ -630,10 +738,11 @@ class ExcelProcessor:
             except Exception as e:
                 self._update_status(f"Final save with openpyxl failed: {str(e)}")
                 self._update_status("Keeping original processed file")
-                self.queue.put(("warning", 
-                    "The enhanced clean-up process failed, but the file was successfully processed. "
-                    "The file should still be usable."
-                ))
+                if self.queue:
+                    self.queue.put(("warning", 
+                        "The enhanced clean-up process failed, but the file was successfully processed. "
+                        "The file should still be usable."
+                    ))
                 
         # Final verification of output file
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
@@ -654,12 +763,20 @@ class ExcelProcessor:
             openpyxl.Workbook: Loaded workbook
         """
         try:
+            # Try loading with pandas first
+            try:
+                self._update_status("Attempting to load workbook with pandas...")
+                df = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')
+                self._update_status(f"Successfully read with pandas: {len(df)} sheets")
+            except Exception as e:
+                self.logger.warning(f"Pandas loading failed, falling back to openpyxl: {str(e)}")
+            
             # Make sure file exists
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"File not found: {file_path}")
                 
             # Try to load with openpyxl's data_only mode
-            self._update_status(f"Loading workbook: {file_path}")
+            self._update_status(f"Loading workbook with openpyxl: {file_path}")
             retry_count = 0
             max_retries = self.file_config.max_retries
             last_error = None
@@ -683,9 +800,21 @@ class ExcelProcessor:
                     else:
                         break
                         
-            # If we get here, all retries failed
-            self.logger.error(f"Failed to load workbook after {max_retries} attempts: {str(last_error)}")
-            raise ValueError(f"Could not load Excel file after multiple attempts: {str(last_error)}")
+            # If all openpyxl attempts failed, try creating a safe copy first
+            self._update_status("Creating safe copy for loading...")
+            safe_copy = self._get_temp_file_path("safe_copy")
+            
+            # Copy the file
+            shutil.copy2(file_path, safe_copy)
+            
+            # Try loading the safe copy
+            try:
+                wb = openpyxl.load_workbook(safe_copy, data_only=True)
+                self._update_status("Successfully loaded workbook from safe copy")
+                return wb
+            except Exception as final_error:
+                self.logger.error(f"Failed to load workbook after all attempts: {str(final_error)}")
+                raise ValueError(f"Could not load Excel file after multiple attempts: {str(final_error)}")
             
         except FileNotFoundError:
             raise  # Re-raise file not found errors as is
@@ -760,8 +889,6 @@ class ExcelProcessor:
                 except:
                     # Add to cleanup list for later
                     self._temp_files.append(stage1_file)
-
-    # ... keep all existing methods ...
 
     def _get_temp_file_path(self, prefix: str = "excel") -> str:
         """
@@ -850,11 +977,12 @@ class ExcelProcessor:
             sheet (Worksheet): Worksheet to unprotect
             password (str): Protection password
         """
-        try:
-            sheet.protection.set_password(password)
-            sheet.protection.sheet = False
-        except Exception as e:
-            raise ValueError(f"Failed to unprotect sheet: {str(e)}")
+        if password:
+            try:
+                sheet.protection.set_password(password)
+                sheet.protection.sheet = False
+            except Exception as e:
+                raise ValueError(f"Failed to unprotect sheet: {str(e)}")
     
     def _process_columns(self, sheet: openpyxl.worksheet.worksheet.Worksheet) -> None:
         """

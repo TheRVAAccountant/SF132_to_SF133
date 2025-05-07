@@ -5,8 +5,16 @@ from typing import Optional
 import threading
 from queue import Queue
 import traceback
+import logging
+import time
+import json
 
-from gui import ExcelProcessorGUI
+try:
+    from gui import ExcelProcessorGUI
+    GUI_AVAILABLE = True
+except ImportError:
+    GUI_AVAILABLE = False
+
 from excel_processor import ExcelProcessor
 from logger_config import LoggerSetup, ErrorHandler, performance_logger
 
@@ -25,17 +33,21 @@ class ExcelProcessingApplication:
         # Initialize processing queue
         self.processing_queue = Queue()
         
-        # Initialize GUI
-        self.gui = ExcelProcessorGUI()
-        
-        # Set up processor with queue
+        # Initialize processor with queue
         self.processor = ExcelProcessor(self.processing_queue)
         
-        # Connect GUI callback
-        self.gui.set_process_callback(self.process_file)
+        # Initialize GUI if available
+        self.gui = None
+        if GUI_AVAILABLE:
+            try:
+                self.gui = ExcelProcessorGUI()
+                # Connect GUI callback
+                self.gui.set_process_callback(self.process_file)
+            except Exception as e:
+                self.logger.warning(f"GUI initialization failed: {e}")
         
     @performance_logger("file_processing")
-    def process_file(self, file_path: str, password: str, queue: Queue) -> None:
+    def process_file(self, file_path: str, password: str = None, queue: Queue = None) -> bool:
         """
         Process Excel file with error handling and logging.
         
@@ -43,6 +55,9 @@ class ExcelProcessingApplication:
             file_path (str): Path to Excel file
             password (str): Sheet protection password
             queue (Queue): Communication queue for GUI updates
+        
+        Returns:
+            bool: True if processing was successful, False otherwise
         """
         try:
             # Convert to absolute path
@@ -58,10 +73,15 @@ class ExcelProcessingApplication:
             self.processor.close_excel_instances()
             
             # Process the file and send updates to queue
-            self.processor.process_file(file_path, password)
+            success = self.processor.process_file(file_path, password)
             
-            # Log successful completion
-            self.logger.info("File processing completed successfully")
+            if success:
+                # Log successful completion
+                self.logger.info("File processing completed successfully")
+                return True
+            else:
+                self.logger.error("File processing failed")
+                return False
             
         except Exception as e:
             # Log error with context
@@ -73,7 +93,9 @@ class ExcelProcessingApplication:
                 }
             )
             # Send error to GUI
-            queue.put(("error", f"Processing failed: {str(e)}"))
+            if queue:
+                queue.put(("error", f"Processing failed: {str(e)}"))
+            return False
             
     def _validate_inputs(self, file_path: str, password: str) -> None:
         """
@@ -81,7 +103,7 @@ class ExcelProcessingApplication:
         
         Args:
             file_path (str): Path to Excel file
-            password (str): Sheet protection password
+            password (str): Sheet protection password (optional)
             
         Raises:
             ValueError: If inputs are invalid
@@ -89,27 +111,47 @@ class ExcelProcessingApplication:
         if not file_path:
             raise ValueError("No file selected")
             
-        if not password:
-            raise ValueError("Password is required")
-            
         if not os.path.exists(file_path):
             raise ValueError(f"File does not exist: {file_path}")
             
         if not file_path.lower().endswith('.xlsx'):
             raise ValueError("File must be an Excel (.xlsx) file")
             
-    def run(self) -> None:
-        """Start the application."""
-        try:
-            self.logger.info("Starting Excel Processing Application")
-            self.gui.run()
-        except Exception as e:
-            self.error_handler.log_exception(e, {'operation': 'application_startup'})
+    def run_gui(self) -> None:
+        """Start the application in GUI mode."""
+        if self.gui:
+            try:
+                self.logger.info("Starting Excel Processing Application (GUI mode)")
+                self.gui.run()
+            except Exception as e:
+                self.error_handler.log_exception(e, {'operation': 'application_startup_gui'})
+                sys.exit(1)
+        else:
+            print("GUI components not available")
             sys.exit(1)
+            
+    def run_cli(self, file_path: str, password: str = None) -> int:
+        """
+        Run the application in command-line mode.
+        
+        Args:
+            file_path (str): Path to Excel file
+            password (str): Optional sheet password
+            
+        Returns:
+            int: Exit code (0 for success, 1 for failure)
+        """
+        try:
+            self.logger.info("Starting Excel Processing Application (CLI mode)")
+            success = self.process_file(file_path, password)
+            return 0 if success else 1
+        except Exception as e:
+            self.error_handler.log_exception(e, {'operation': 'application_startup_cli'})
+            return 1
             
 def create_required_directories() -> None:
     """Create required application directories."""
-    directories = ['logs', 'output']
+    directories = ['logs', 'output', 'output/backups']
     for directory in directories:
         Path(directory).mkdir(parents=True, exist_ok=True)
         
@@ -133,8 +175,13 @@ def setup_exception_handling() -> None:
     threading.excepthook = handle_thread_exception
     
 @performance_logger("application_startup")
-def main() -> None:
-    """Main entry point for the application."""
+def main() -> int:
+    """
+    Main entry point for the application.
+    
+    Returns:
+        int: Exit code (0 for success, 1 for failure)
+    """
     try:
         # Create required directories
         create_required_directories()
@@ -142,10 +189,39 @@ def main() -> None:
         # Set up global exception handling
         setup_exception_handling()
         
+        # Setup minimal logging for CLI mode
+        logger = logging.getLogger("ExcelProcessor")
+        if not logger.handlers:
+            logger.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+            
+            # Add file handler
+            file_handler = logging.FileHandler('excel_processor.log')
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        
         # Start the application
         app = ExcelProcessingApplication()
-        app.run()
         
+        # Check if a file path is provided as argument
+        if len(sys.argv) > 1:
+            file_path = sys.argv[1]
+            # Optional password as second argument
+            password = sys.argv[2] if len(sys.argv) > 2 else None
+            return app.run_cli(file_path, password)
+        else:
+            # If no command-line arguments and GUI is available, start in GUI mode
+            if GUI_AVAILABLE:
+                app.run_gui()
+                return 0
+            else:
+                # If no arguments and no GUI, show usage information
+                print("Usage: python main.py [excel_file_path] [optional_password]")
+                return 1
+                
     except Exception as e:
         # Get logger instance
         logger = LoggerSetup().setup_logging()
@@ -160,7 +236,7 @@ def main() -> None:
         # Ensure the error is displayed to the user
         print(f"Fatal error during startup: {str(e)}")
         print("Check the logs for more details.")
-        sys.exit(1)
+        return 1
         
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
