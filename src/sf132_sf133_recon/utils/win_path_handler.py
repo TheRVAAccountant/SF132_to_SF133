@@ -123,7 +123,7 @@ def get_long_path_name(path: str) -> str:
 
 def handle_long_paths(path: str) -> str:
     """
-    Handle Windows long paths (>260 characters) using the \\?\ prefix.
+    Handle Windows long paths (>260 characters) using a special prefix.
     
     Args:
         path: File path that might exceed Windows path limits
@@ -163,20 +163,20 @@ def ensure_unc_path(path: str) -> str:
         return path
         
     # Return if not a network path
-    if not path.startswith(r'\\'):
+    if not path.startswith('\\\\'):
         return path
         
     # Normalize path separators
     path = path.replace('/', '\\')
     
     # Check if this is already a properly formatted UNC path
-    if path.startswith(r'\\?\UNC\'):
+    if path.startswith('\\\\?\\UNC\\\\'):
         return path
         
     # Format as UNC path for long path support
-    if path.startswith(r'\\'):
+    if path.startswith('\\\\'):
         # Remove the initial \\ and add \\?\UNC\
-        path = r'\\?\UNC\' + path[2:]
+        path = '\\\\?\\UNC\\\\' + path[2:]
     
     return path
 
@@ -271,7 +271,8 @@ def fix_excel_path(path: str) -> str:
             path = handle_long_paths(path)
         
         # 3. Convert to short path if it contains problematic characters
-        if ' ' in path or any(c in path for c in '()[]{}!@#$%^&=;,\'`~'):
+        problematic_chars = '()[]{}!@#$%^&=;,' + "'" + '`~'
+        if ' ' in path or any(c in path for c in problematic_chars):
             try:
                 if os.path.exists(path):
                     path = get_short_path_name(path)
