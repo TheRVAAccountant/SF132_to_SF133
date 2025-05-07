@@ -59,6 +59,16 @@ class ExcelProcessorGUI:
         self.main_frame = ttk.Frame(self.root, style='Custom.TFrame', padding="20")
         self.main_frame.grid(row=0, column=0, sticky="nsew")
         
+        # Processing variables
+        self.start_time: Optional[float] = None
+        self.processing_thread: Optional[threading.Thread] = None
+        self.queue = queue.Queue()
+        self.process_callback = None
+        
+        # Recovery mode flag - enabled by default on Windows
+        # Define this before initializing menu that uses it
+        self.recovery_mode = tk.BooleanVar(value=sys.platform.startswith('win'))
+        
         # Initialize menu
         self._init_menu()
         
@@ -67,15 +77,6 @@ class ExcelProcessorGUI:
         self._init_password_input()
         self._init_progress_components()
         self._init_status_components()
-        
-        # Processing variables
-        self.start_time: Optional[float] = None
-        self.processing_thread: Optional[threading.Thread] = None
-        self.queue = queue.Queue()
-        self.process_callback = None
-        
-        # Recovery mode flag - enabled by default on Windows
-        self.recovery_mode = tk.BooleanVar(value=sys.platform.startswith('win'))
     
     def apply_forest_dark_theme(self):
         """Apply the forest-dark theme to the GUI."""
