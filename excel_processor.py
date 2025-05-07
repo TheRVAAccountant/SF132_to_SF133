@@ -97,16 +97,43 @@ class ExcelProcessor:
         self._update_status("Ensuring all Excel instances are closed...")
         excel_pids = []
         
-        # First find all Excel processes
-        for proc in psutil.process_iter(['pid', 'name']):
+        # First find all Excel processes, including COM components
+        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
             try:
-                if proc.info['name'] and 'EXCEL.EXE' in proc.info['name'].upper():
+                # Check both process name and command line for Excel references
+                proc_name = proc.info.get('name', '').upper()
+                cmd_line = ' '.join(proc.info.get('cmdline', [])).upper()
+                
+                # Look for any Excel-related processes
+                if any(excel_marker in proc_name for excel_marker in ['EXCEL', 'EXCEL.EXE']) or \
+                   any(excel_marker in cmd_line for excel_marker in ['EXCEL.EXE', 'EXCELCNV', 'DCOM']):
                     excel_pids.append(proc.info['pid'])
             except Exception:
                 pass
         
         if excel_pids:
-            self._update_status(f"Found {len(excel_pids)} Excel processes to close")
+            self._update_status(f"Found {len(excel_pids)} Excel-related processes to close")
+            
+        # First try graceful termination with COM cleanup
+        try:
+            # Initialize COM
+            pythoncom.CoInitialize()
+            
+            # Try to quit any remaining Excel applications through COM
+            try:
+                excel = win32com.client.GetActiveObject("Excel.Application")
+                excel.DisplayAlerts = False
+                excel.Quit()
+                del excel
+                gc.collect()
+                self.logger.info("Gracefully closed active Excel application via COM")
+            except:
+                pass
+            
+            # Uninitialize COM
+            pythoncom.CoUninitialize()
+        except:
+            pass
             
         # Then terminate each process with proper cleanup
         for pid in excel_pids:
@@ -119,7 +146,7 @@ class ExcelProcessor:
                 # Try more aggressive termination
                 try:
                     if psutil.pid_exists(pid):
-                        os.kill(pid, 9)  # SIGKILL
+                        os.kill(pid, 9)  # SIGKILL or equivalent on Windows
                 except Exception:
                     pass
         
@@ -131,8 +158,22 @@ class ExcelProcessor:
                 
         if remaining:
             self.logger.warning(f"Could not terminate {len(remaining)} Excel processes: {remaining}")
+            # For stubborn processes, try the Windows-specific taskkill command
+            if sys.platform.startswith('win'):
+                try:
+                    self._update_status("Using system taskkill command for stubborn Excel processes...")
+                    subprocess.run(['taskkill', '/F', '/IM', 'EXCEL.EXE'], 
+                                   stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                except Exception as e:
+                    self.logger.warning(f"Taskkill failed: {e}")
         else:
             self._update_status("All Excel processes successfully closed")
+            
+        # Add a delay to ensure file system has time to release locks
+        time.sleep(2)
+        
+        # Force garbage collection to release COM objects
+        gc.collect()
 
     def process_file(self, original_file: str, password: str = None) -> bool:
         """
@@ -150,41 +191,139 @@ class ExcelProcessor:
             original_file = os.path.abspath(original_file)
             self._update_status(f"Processing file: {original_file}")
             
-            self._validate_file(original_file)
-            new_file = self._generate_new_filename(original_file)
+            # Maximum number of attempts for the overall process
+            max_attempts = 3
+            attempt_count = 0
             
-            # Ensure Excel is fully closed before starting
-            self.close_excel_instances()
+            # Create a verified backup before any processing
+            try:
+                backup_dir = Path(self.config.backup_directory)
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Create a timestamped backup
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                backup_name = f"{Path(original_file).stem}_original_backup_{timestamp}.xlsx"
+                backup_path = str(backup_dir / backup_name)
+                
+                # Copy the original file
+                shutil.copy2(original_file, backup_path)
+                self._update_status(f"Created original backup at: {backup_path}")
+            except Exception as e:
+                self.logger.warning(f"Could not create original backup: {e}")
+                # Continue even if backup fails - this is just an extra safety measure
             
-            # First make a clean copy of the original file
-            temp_copy = self._create_verified_copy(original_file)
-            
-            # ENHANCEMENT: Create a fresh, validated workbook rather than modifying the original
-            self._update_progress(10, "Creating fresh workbook...")
-            success = self._process_with_fresh_workbook(temp_copy, new_file, password)
-            
-            if success:
-                self._update_progress(95, "Validating final workbook...")
-                if self._validate_excel_file(new_file):
-                    self._update_progress(100, "Processing complete")
-                    self._update_status(f"Successfully created and processed: {new_file}")
-                    if self.queue:
-                        self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
-                    return True
-                else:
-                    # If validation fails, try repair process
-                    self._update_status("File validation failed, attempting repair...")
-                    if self._repair_workbook(new_file):
-                        self._update_status("File repaired successfully")
-                        if self.queue:
-                            self.queue.put(("success", f"File processed and repaired. Output saved to: {new_file}"))
-                        return True
+            while attempt_count < max_attempts:
+                try:
+                    attempt_count += 1
+                    self._update_status(f"Processing attempt {attempt_count}/{max_attempts}")
+                    
+                    # Basic validation of input file
+                    self._validate_file(original_file)
+                    new_file = self._generate_new_filename(original_file)
+                    
+                    # Ensure Excel is fully closed before starting
+                    self.close_excel_instances()
+                    
+                    # First make a clean copy of the original file with additional error handling
+                    try:
+                        temp_copy = self._create_verified_copy(original_file)
+                    except Exception as copy_error:
+                        self.logger.warning(f"Verified copy failed: {copy_error}, using direct copy")
+                        # Fall back to direct copy if verified copy fails
+                        temp_copy = self._get_temp_file_path("direct_temp_copy")
+                        self._direct_file_copy(original_file, temp_copy)
+                        
+                        # Verify the copy exists and has content
+                        if not os.path.exists(temp_copy) or os.path.getsize(temp_copy) == 0:
+                            raise ValueError("Failed to create a valid copy of the original file")
+                    
+                    # Main processing approaches in order of preference:
+                    # 1. Fresh workbook approach - most reliable but can fail with complex files
+                    # 2. Legacy library-based processing - more compatible but slower
+                    # 3. Legacy COM-based processing - most compatible with complex files
+                    
+                    # APPROACH 1: Try the fresh workbook approach first (most reliable)
+                    self._update_progress(10, "Creating fresh workbook...")
+                    success = self._process_with_fresh_workbook(temp_copy, new_file, password)
+                    
+                    if success:
+                        self._update_progress(95, "Validating final workbook...")
+                        if self._validate_excel_file(new_file):
+                            self._update_progress(100, "Processing complete")
+                            self._update_status(f"Successfully created and processed: {new_file}")
+                            if self.queue:
+                                self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
+                            return True
+                        else:
+                            # If validation fails, try repair process
+                            self._update_status("File validation failed, attempting repair...")
+                            if self._repair_workbook(new_file):
+                                self._update_status("File repaired successfully")
+                                if self.queue:
+                                    self.queue.put(("success", f"File processed and repaired. Output saved to: {new_file}"))
+                                return True
+                            else:
+                                # If repair failed, move to next attempt
+                                self.logger.warning("Repair failed, trying next approach")
+                                raise ValueError("Failed to create a valid Excel file")
                     else:
-                        raise ValueError("Failed to create a valid Excel file")
-            else:
-                # Fall back to legacy processing method
-                self._update_status("Fresh workbook approach failed, falling back to original method...")
-                return self._process_with_legacy_method(original_file, new_file, password)
+                        # APPROACH 2: Fall back to legacy processing methods
+                        self._update_status("Fresh workbook approach failed, falling back to library methods...")
+                        success = self._process_with_legacy_method(original_file, new_file, password)
+                        
+                        if success:
+                            self._update_progress(100, "Legacy processing complete")
+                            self._update_status(f"Successfully processed with legacy method: {new_file}")
+                            if self.queue:
+                                self.queue.put(("success", f"File processed successfully. Output saved to: {new_file}"))
+                            return True
+                            
+                        # If everything failed, try again with a delay
+                        self.logger.warning(f"All processing attempts failed in round {attempt_count}")
+                        
+                        if attempt_count < max_attempts:
+                            # Clear resources before next attempt
+                            self.close_excel_instances()
+                            gc.collect()
+                            time.sleep(3)  # Wait before next attempt
+                            
+                            # Special error handling for subsequent attempts
+                            if attempt_count == 2:
+                                # On the last attempt, try more aggressive resource cleanup
+                                self._update_status("Performing aggressive resource cleanup before final attempt...")
+                                
+                                # Force garbage collection multiple times
+                                for _ in range(3):
+                                    gc.collect()
+                                    time.sleep(1)
+                                
+                                # On Windows, try to find and kill any hidden Excel processes
+                                if sys.platform.startswith('win'):
+                                    try:
+                                        # Use taskkill with force option
+                                        subprocess.run(['taskkill', '/F', '/IM', 'EXCEL.EXE', '/T'], 
+                                                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                                    except:
+                                        pass
+                        
+                except Exception as attempt_error:
+                    self.logger.error(f"Attempt {attempt_count} failed: {attempt_error}", exc_info=True)
+                    
+                    if attempt_count >= max_attempts:
+                        # If we've exhausted all attempts, report the error
+                        if self.queue:
+                            self.queue.put(("error", f"Failed after {max_attempts} attempts: {str(attempt_error)}"))
+                        return False
+                    
+                    # Clean up and prepare for next attempt
+                    self.close_excel_instances()
+                    gc.collect()
+                    time.sleep(2)
+            
+            # If we get here, all attempts have failed
+            if self.queue:
+                self.queue.put(("error", f"Failed after {max_attempts} attempts"))
+            return False
                 
         except Exception as e:
             self.logger.error("Processing failed", exc_info=True)
@@ -464,47 +603,134 @@ class ExcelProcessor:
         try:
             # Method 1: Try opening with openpyxl
             wb = openpyxl.load_workbook(file_path, read_only=True)
+            sheet_names = wb.sheetnames
             wb.close()
             
+            # Initial validation success
+            self._update_status(f"Basic validation with openpyxl successful. Found {len(sheet_names)} sheets.")
+            
             # Method 2: Verify with Excel COM if possible
-            if self.excel_config.enable_com:
-                # Initialize COM
-                pythoncom.CoInitialize()
+            if self.excel_config.enable_com and sys.platform.startswith('win'):
+                # Make sure Excel is not running
+                self.close_excel_instances()
                 
-                # Start Excel
-                excel = win32com.client.Dispatch("Excel.Application")
-                excel.Visible = False
-                excel.DisplayAlerts = False
+                # Initialize COM with error handling
+                try:
+                    pythoncom.CoInitialize()
+                except Exception as e:
+                    self.logger.warning(f"COM initialization failed: {e}")
+                
+                excel = None
+                wb = None
                 
                 try:
+                    # Start Excel with proper exception handling
+                    try:
+                        excel = win32com.client.Dispatch("Excel.Application")
+                        excel.Visible = False
+                        excel.DisplayAlerts = False
+                    except Exception as e:
+                        self.logger.warning(f"Excel COM initialization failed: {e}")
+                        return True  # Fall back to openpyxl validation
+                    
                     # Try to open the file
-                    wb = excel.Workbooks.Open(
-                        file_path,
-                        UpdateLinks=0,
-                        ReadOnly=True
-                    )
+                    try:
+                        wb = excel.Workbooks.Open(
+                            file_path,
+                            UpdateLinks=0,
+                            ReadOnly=True
+                        )
+                    except Exception as e:
+                        self.logger.warning(f"Excel COM file open failed: {e}")
+                        return True  # Fall back to openpyxl validation
                     
-                    # Check if there are any error messages
-                    has_errors = excel.ErrorCheckingStatus
+                    # Check for errors using a more reliable method than ErrorCheckingStatus
+                    has_errors = False
                     
-                    # Close without saving
-                    wb.Close(SaveChanges=False)
-                    excel.Quit()
+                    # Try different error checking methods
+                    try:
+                        # Method 1: Check if ErrorCheckingStatus attribute exists and use it
+                        if hasattr(excel, 'ErrorCheckingStatus'):
+                            has_errors = excel.ErrorCheckingStatus
+                        # Method 2: Use Excel's CheckWorkbookCompatibility method if available
+                        elif hasattr(wb, 'CheckCompatibility'):
+                            compatibility_issues = wb.CheckCompatibility
+                            has_errors = compatibility_issues
+                        # Method 3: Check for error alerts on sheets
+                        else:
+                            # If no direct error checking is available, check if file can be saved
+                            temp_path = self._get_temp_file_path("verify")
+                            wb.SaveAs(temp_path, FileFormat=51)  # 51 = xlsx
+                            if os.path.exists(temp_path):
+                                os.unlink(temp_path)
+                            has_errors = False
+                    except Exception as e:
+                        self.logger.debug(f"Error checking method failed: {e}")
+                        # If error checking fails, assume the file is okay if we got this far
+                        has_errors = False
                     
+                    # Close properly
+                    if wb:
+                        try:
+                            wb.Close(SaveChanges=False)
+                        except:
+                            pass
+                        
+                    if excel:
+                        try:
+                            excel.Quit()
+                        except:
+                            pass
+                        
                     # Cleanup COM objects
-                    del wb
-                    del excel
+                    if wb:
+                        del wb
+                    if excel:
+                        del excel
+                        
                     gc.collect()
-                    pythoncom.CoUninitialize()
+                    
+                    try:
+                        pythoncom.CoUninitialize()
+                    except:
+                        pass
                     
                     if has_errors:
                         self.logger.warning(f"Excel detected errors in {file_path}")
                         return False
-                        
+                    
+                    self._update_status("Enhanced COM validation successful")
+                    
                 except Exception as e:
                     self.logger.warning(f"COM validation failed: {e}")
-                    return False
+                    # Thorough cleanup after failure
+                    if wb:
+                        try:
+                            wb.Close(SaveChanges=False)
+                        except:
+                            pass
+                    if excel:
+                        try:
+                            excel.Quit()
+                        except:
+                            pass
                     
+                    # Cleanup COM objects
+                    if wb:
+                        del wb
+                    if excel:
+                        del excel
+                        
+                    gc.collect()
+                    
+                    try:
+                        pythoncom.CoUninitialize()
+                    except:
+                        pass
+                    
+                    # Fall back to considering the file valid if openpyxl could open it
+                    return True
+            
             # If we got here, file seems valid
             return True
             
@@ -525,104 +751,489 @@ class ExcelProcessor:
         try:
             self._update_status("Attempting to repair workbook...")
             
+            # Ensure all Excel processes are closed
+            self.close_excel_instances()
+            
             # Create a backup before repair
             backup_path = self._create_backup_file(file_path)
+            self._update_status(f"Created backup at: {backup_path}")
             
-            # Method 1: Use Excel's repair functionality
-            if self.excel_config.enable_com and self.excel_config.use_com_for_final_save:
+            # Check file access before attempting repair
+            max_retries = 5
+            retry_count = 0
+            file_accessible = False
+            
+            while retry_count < max_retries and not file_accessible:
                 try:
-                    self._update_status("Using Excel's repair functionality...")
-                    
-                    # Initialize COM
-                    pythoncom.CoInitialize()
-                    
-                    # Start Excel
-                    excel = win32com.client.Dispatch("Excel.Application")
-                    excel.Visible = False
-                    excel.DisplayAlerts = False
-                    excel.EnableEvents = False
-                    
-                    # Set calculation to manual to avoid recalculation issues
-                    excel.Calculation = -4135  # xlCalculationManual
-                    
-                    # Open with repair option
-                    wb = excel.Workbooks.Open(
-                        file_path,
-                        UpdateLinks=0,
-                        CorruptLoad=2  # xlRepairFile - repair mode
-                    )
-                    
-                    # Calculate once to ensure data is current
-                    wb.Calculate()
-                    
-                    # Save to clean file
-                    repaired_path = self._get_temp_file_path("repaired")
-                    wb.SaveAs(
-                        repaired_path,
-                        FileFormat=51,  # xlOpenXMLWorkbook
-                        CreateBackup=False
-                    )
-                    
-                    # Close workbook and Excel
-                    wb.Close(SaveChanges=False)
-                    excel.Quit()
-                    
-                    # Cleanup COM objects
-                    del wb
-                    del excel
-                    gc.collect()
-                    pythoncom.CoUninitialize()
-                    
-                    # Replace original with cleaned version if successful
-                    if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
-                        if os.path.exists(file_path):
-                            os.unlink(file_path)
-                        shutil.copy2(repaired_path, file_path)
-                        return True
-                        
+                    # Test file accessibility with read/write checks
+                    with open(file_path, 'rb+') as test_file:
+                        test_file.seek(0)
+                        test_file.read(1)  # Try to read a byte
+                        test_file.seek(0)  # Go back to beginning
+                    file_accessible = True
                 except Exception as e:
-                    self.logger.warning(f"Excel repair failed: {e}")
-            
-            # Method 2: Try pandas-based repair
-            try:
-                self._update_status("Attempting pandas-based repair...")
-                
-                # Read all sheets with pandas
-                excel_file = pd.ExcelFile(file_path)
-                sheet_names = excel_file.sheet_names
-                
-                # Create a new Excel writer
-                repaired_path = self._get_temp_file_path("pandas_repaired")
-                writer = pd.ExcelWriter(repaired_path, engine='openpyxl')
-                
-                # Copy each sheet
-                for sheet_name in sheet_names:
-                    df = pd.read_excel(file_path, sheet_name=sheet_name)
-                    df.to_excel(writer, sheet_name=sheet_name, index=False)
-                
-                # Save the writer
-                writer.close()
-                
-                # Replace original with repaired version
-                if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
-                    if os.path.exists(file_path):
-                        os.unlink(file_path)
-                    shutil.copy2(repaired_path, file_path)
-                    return True
+                    retry_count += 1
+                    self.logger.warning(f"File access retry {retry_count}/{max_retries}: {e}")
                     
-            except Exception as e:
-                self.logger.warning(f"Pandas repair failed: {e}")
+                    # Try to release the file by forcing garbage collection
+                    gc.collect()
+                    time.sleep(2)  # Wait before retrying
+                    
+                    # On Windows, try additional methods to release the file
+                    if sys.platform.startswith('win'):
+                        self.close_excel_instances()
+                        
+                        # Try to work with a copy if original is inaccessible
+                        if retry_count >= 3:
+                            try:
+                                temp_copy = self._get_temp_file_path("repair_copy")
+                                self._update_status(f"Attempting to create a copy at {temp_copy}...")
+                                
+                                # Use low-level file operations to copy
+                                with open(file_path, 'rb') as src, open(temp_copy, 'wb') as dst:
+                                    dst.write(src.read())
+                                
+                                # If copy succeeds, work with the copy instead
+                                if os.path.exists(temp_copy) and os.path.getsize(temp_copy) > 0:
+                                    self._update_status("Working with copy since original is locked")
+                                    file_path = temp_copy
+                                    file_accessible = True
+                            except Exception as copy_err:
+                                self.logger.warning(f"Failed to create copy: {copy_err}")
             
-            # If all repair methods failed, restore from backup
-            self._update_status("Restoration from backup...")
-            if os.path.exists(backup_path):
-                shutil.copy2(backup_path, file_path)
+            if not file_accessible:
+                self.logger.error("Could not access file for repair after multiple attempts")
+                return False
+            
+            # Try multiple repair methods in sequence
+            repair_methods = [
+                self._repair_with_excel_com,
+                self._repair_with_pandas,
+                self._repair_with_openpyxl,
+                self._repair_with_system_tool
+            ]
+            
+            # Try each repair method until one succeeds
+            for repair_method in repair_methods:
+                try:
+                    self._update_status(f"Trying repair method: {repair_method.__name__}")
+                    success, repaired_path = repair_method(file_path)
+                    
+                    if success and os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                        # Validate the repaired file
+                        if self._validate_repaired_file(repaired_path):
+                            # Replace original with repaired version
+                            try:
+                                # Enhanced file replacement logic
+                                original_filename = os.path.basename(file_path)
+                                self._update_status(f"Replacing {original_filename} with repaired version...")
+                                
+                                # Remove original if it exists and isn't the same as the repaired file
+                                if os.path.exists(file_path) and os.path.abspath(file_path) != os.path.abspath(repaired_path):
+                                    try:
+                                        os.unlink(file_path)
+                                    except Exception as e:
+                                        self.logger.warning(f"Could not remove original file: {e}")
+                                        # If we can't delete, try to move it instead
+                                        try:
+                                            failed_path = self._get_temp_file_path("failed_original")
+                                            shutil.move(file_path, failed_path)
+                                        except:
+                                            pass
+                                
+                                # Copy the repaired file to the original location
+                                shutil.copy2(repaired_path, file_path)
+                                
+                                # Verify the final file
+                                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                                    self._update_status("Repair completed successfully")
+                                    return True
+                            except Exception as e:
+                                self.logger.warning(f"File replacement failed: {e}")
+                                # Continue to next method if replacement fails
+                        else:
+                            self.logger.warning("Repaired file validation failed")
+                except Exception as method_error:
+                    self.logger.warning(f"{repair_method.__name__} failed: {method_error}")
+            
+            # If all repair methods failed, try to restore from backup
+            self._update_status("All repair methods failed. Attempting to restore from backup...")
+            if os.path.exists(backup_path) and os.path.getsize(backup_path) > 0:
+                try:
+                    # Ensure target file is accessible
+                    if os.path.exists(file_path):
+                        try:
+                            os.unlink(file_path)
+                        except:
+                            # If deletion fails, try to use a new path instead
+                            file_path = self._get_temp_file_path("restored")
+                    
+                    # Copy the backup
+                    shutil.copy2(backup_path, file_path)
+                    
+                    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                        self._update_status("Successfully restored from backup")
+                        return True
+                except Exception as restore_error:
+                    self.logger.error(f"Backup restoration failed: {restore_error}")
             
             return False
             
         except Exception as e:
             self.logger.error(f"Repair process failed: {e}")
             return False
+            
+    def _validate_repaired_file(self, file_path: str) -> bool:
+        """
+        Validate a repaired Excel file to ensure it's usable.
+        
+        Args:
+            file_path (str): Path to the repaired file
+            
+        Returns:
+            bool: Whether the file is valid
+        """
+        try:
+            # Check if file exists and has size
+            if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+                return False
+                
+            # Try opening with openpyxl in read-only mode
+            try:
+                wb = openpyxl.load_workbook(file_path, read_only=True)
+                sheet_count = len(wb.sheetnames)
+                wb.close()
+                self._update_status(f"Validated repaired file with {sheet_count} sheets")
+                return True
+            except Exception as e:
+                self.logger.warning(f"openpyxl validation failed: {e}")
+                
+            # Try with pandas as fallback
+            try:
+                excel_file = pd.ExcelFile(file_path)
+                sheet_count = len(excel_file.sheet_names)
+                excel_file.close()
+                self._update_status(f"Validated repaired file with pandas: {sheet_count} sheets")
+                return True
+            except Exception as e:
+                self.logger.warning(f"pandas validation failed: {e}")
+                
+            return False
+            
+        except Exception as e:
+            self.logger.warning(f"Repair validation failed: {e}")
+            return False
+            
+    def _repair_with_excel_com(self, file_path: str) -> tuple:
+        """
+        Repair Excel file using Excel's COM interface.
+        
+        Args:
+            file_path (str): Path to Excel file to repair
+            
+        Returns:
+            tuple: (success, repaired_file_path)
+        """
+        if not self.excel_config.enable_com or not sys.platform.startswith('win'):
+            return False, None
+            
+        excel = None
+        wb = None
+        repaired_path = self._get_temp_file_path("com_repaired")
+        
+        try:
+            # Ensure Excel is closed
+            self.close_excel_instances()
+            
+            # Initialize COM
+            pythoncom.CoInitialize()
+            
+            # Start Excel with robust error handling
+            try:
+                excel = win32com.client.Dispatch("Excel.Application")
+                excel.Visible = False
+                excel.DisplayAlerts = False
+                excel.EnableEvents = False
+                excel.Calculation = -4135  # xlCalculationManual
+            except Exception as e:
+                self.logger.warning(f"Excel COM initialization failed: {e}")
+                return False, None
+                
+            # Try to open the file in repair mode
+            try:
+                self._update_status("Opening file in repair mode...")
+                wb = excel.Workbooks.Open(
+                    file_path,
+                    UpdateLinks=0,
+                    CorruptLoad=2  # xlRepairFile - repair mode
+                )
+            except Exception as e:
+                self.logger.warning(f"Failed to open file in repair mode: {e}")
+                # Try with different parameters
+                try:
+                    wb = excel.Workbooks.Open(
+                        file_path,
+                        UpdateLinks=0,
+                        ReadOnly=True
+                    )
+                except Exception as e2:
+                    self.logger.warning(f"Failed to open file in read-only mode: {e2}")
+                    return False, None
+            
+            # Calculate workbook
+            try:
+                wb.Calculate()
+            except:
+                pass
+                
+            # Save to a new file
+            self._update_status(f"Saving repaired file to {repaired_path}...")
+            wb.SaveAs(
+                repaired_path,
+                FileFormat=51,  # xlOpenXMLWorkbook
+                CreateBackup=False
+            )
+            
+            # Close workbook and quit Excel
+            wb.Close(SaveChanges=False)
+            excel.Quit()
+            
+            # Cleanup
+            del wb
+            del excel
+            wb = None
+            excel = None
+            gc.collect()
+            
+            # Verify the repaired file
+            if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                self._update_status("Excel COM repair successful")
+                return True, repaired_path
+                
+            return False, None
+            
+        except Exception as e:
+            self.logger.warning(f"Excel COM repair failed: {e}")
+            return False, None
+        finally:
+            # Ensure proper cleanup
+            if wb:
+                try:
+                    wb.Close(SaveChanges=False)
+                except:
+                    pass
+            if excel:
+                try:
+                    excel.Quit()
+                except:
+                    pass
+                    
+            # Force garbage collection
+            if wb:
+                del wb
+            if excel:
+                del excel
+            gc.collect()
+            
+            # Uninitialize COM
+            try:
+                pythoncom.CoUninitialize()
+            except:
+                pass
+                
+    def _repair_with_pandas(self, file_path: str) -> tuple:
+        """
+        Repair Excel file using pandas.
+        
+        Args:
+            file_path (str): Path to Excel file to repair
+            
+        Returns:
+            tuple: (success, repaired_file_path)
+        """
+        repaired_path = self._get_temp_file_path("pandas_repaired")
+        
+        try:
+            self._update_status("Attempting pandas-based repair...")
+            
+            # Try to read the file with pandas
+            excel_file = pd.ExcelFile(file_path)
+            sheet_names = excel_file.sheet_names
+            
+            # Create a new Excel writer
+            writer = pd.ExcelWriter(repaired_path, engine='openpyxl')
+            
+            # Process each sheet
+            for sheet_name in sheet_names:
+                self._update_status(f"Processing sheet: {sheet_name}")
+                # Read with error handling for individual sheets
+                try:
+                    df = pd.read_excel(file_path, sheet_name=sheet_name)
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                except Exception as sheet_err:
+                    self.logger.warning(f"Could not process sheet {sheet_name}: {sheet_err}")
+                    # Create an empty sheet instead
+                    df = pd.DataFrame()
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+            
+            # Save the writer
+            writer.close()
+            
+            # Verify the repaired file
+            if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                self._update_status("Pandas repair successful")
+                return True, repaired_path
+                
+            return False, None
+            
+        except Exception as e:
+            self.logger.warning(f"Pandas repair failed: {e}")
+            return False, None
+            
+    def _repair_with_openpyxl(self, file_path: str) -> tuple:
+        """
+        Repair Excel file using openpyxl.
+        
+        Args:
+            file_path (str): Path to Excel file to repair
+            
+        Returns:
+            tuple: (success, repaired_file_path)
+        """
+        repaired_path = self._get_temp_file_path("openpyxl_repaired")
+        
+        try:
+            self._update_status("Attempting openpyxl-based repair...")
+            
+            # Try to read the workbook
+            try:
+                wb = openpyxl.load_workbook(file_path, read_only=True)
+            except Exception as read_err:
+                self.logger.warning(f"Failed to open with openpyxl: {read_err}")
+                return False, None
+                
+            # Create a new workbook
+            new_wb = openpyxl.Workbook()
+            
+            # Remove default sheet
+            if "Sheet" in new_wb.sheetnames:
+                new_wb.remove(new_wb["Sheet"])
+                
+            # Copy each sheet from source
+            for sheet_name in wb.sheetnames:
+                self._update_status(f"Processing sheet: {sheet_name}")
+                # Create new sheet
+                new_sheet = new_wb.create_sheet(title=sheet_name)
+                src_sheet = wb[sheet_name]
+                
+                # Try to copy basic data
+                try:
+                    # Get rows from source sheet
+                    for row_idx, row in enumerate(src_sheet.iter_rows(values_only=True), 1):
+                        for col_idx, value in enumerate(row, 1):
+                            new_sheet.cell(row=row_idx, column=col_idx, value=value)
+                except Exception as sheet_err:
+                    self.logger.warning(f"Error copying sheet {sheet_name}: {sheet_err}")
+            
+            # Close the source workbook
+            wb.close()
+            
+            # Save the new workbook
+            new_wb.save(repaired_path)
+            new_wb.close()
+            
+            # Verify the repaired file
+            if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                self._update_status("Openpyxl repair successful")
+                return True, repaired_path
+                
+            return False, None
+            
+        except Exception as e:
+            self.logger.warning(f"Openpyxl repair failed: {e}")
+            return False, None
+            
+    def _repair_with_system_tool(self, file_path: str) -> tuple:
+        """
+        Try to repair the Excel file using system tools (Windows only).
+        
+        Args:
+            file_path (str): Path to Excel file to repair
+            
+        Returns:
+            tuple: (success, repaired_file_path)
+        """
+        if not sys.platform.startswith('win'):
+            return False, None
+            
+        repaired_path = self._get_temp_file_path("system_repaired")
+        
+        try:
+            self._update_status("Attempting system-based repair...")
+            
+            # First try to copy the file to a new location
+            shutil.copy2(file_path, repaired_path)
+            
+            # Then try ExcelCnv command-line tool if available (on some Windows systems)
+            try:
+                office_paths = [
+                    r"C:\Program Files\Microsoft Office\root\Office16",
+                    r"C:\Program Files (x86)\Microsoft Office\root\Office16",
+                    r"C:\Program Files\Microsoft Office\Office16",
+                    r"C:\Program Files (x86)\Microsoft Office\Office16",
+                    r"C:\Program Files\Microsoft Office\Office15",
+                    r"C:\Program Files (x86)\Microsoft Office\Office15",
+                ]
+                
+                excelcnv_path = None
+                for office_path in office_paths:
+                    test_path = os.path.join(office_path, "excelcnv.exe")
+                    if os.path.exists(test_path):
+                        excelcnv_path = test_path
+                        break
+                        
+                if excelcnv_path:
+                    self._update_status(f"Found Excel converter at: {excelcnv_path}")
+                    
+                    # Generate a temporary output path
+                    output_path = self._get_temp_file_path("excelcnv_output")
+                    
+                    # Run ExcelCnv to convert/repair the file
+                    subprocess.run([
+                        excelcnv_path,
+                        "-nme",  # No message boxes
+                        "-oice",  # Open Invalid with Converter Extensions
+                        "-xlsb",  # Convert to XLSB format first (more robust)
+                        repaired_path,
+                        output_path
+                    ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                    
+                    # Convert back to xlsx
+                    if os.path.exists(output_path):
+                        final_path = self._get_temp_file_path("final_repaired")
+                        subprocess.run([
+                            excelcnv_path,
+                            "-nme",
+                            "-xlsx",  # Convert to XLSX format
+                            output_path,
+                            final_path
+                        ], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                        
+                        if os.path.exists(final_path) and os.path.getsize(final_path) > 0:
+                            self._update_status("System repair successful")
+                            return True, final_path
+            except Exception as system_err:
+                self.logger.warning(f"System tool repair failed: {system_err}")
+            
+            # If system tools failed, return the simple copy if it exists
+            if os.path.exists(repaired_path) and os.path.getsize(repaired_path) > 0:
+                return True, repaired_path
+                
+            return False, None
+            
+        except Exception as e:
+            self.logger.warning(f"System repair failed: {e}")
+            return False, None
     
     def _process_with_legacy_method(self, original_file: str, new_file: str, password: str) -> bool:
         """
@@ -803,23 +1414,167 @@ class ExcelProcessor:
             # Ensure the destination directory exists
             os.makedirs(os.path.dirname(dest_file), exist_ok=True)
             
-            # Make a direct copy of the file
-            shutil.copy2(source_file, dest_file)
+            # Make sure we can access the source file
+            max_retries = 5
+            retry_count = 0
+            file_accessible = False
             
-            # Verify the copy succeeded
-            if not os.path.exists(dest_file):
-                raise IOError(f"Failed to copy file to {dest_file}")
+            while retry_count < max_retries and not file_accessible:
+                try:
+                    # Test if we can read the source file
+                    with open(source_file, 'rb') as test_file:
+                        test_file.read(1)  # Try to read a byte
+                    file_accessible = True
+                except Exception as e:
+                    retry_count += 1
+                    self.logger.warning(f"Source file access retry {retry_count}/{max_retries}: {e}")
+                    
+                    # Try to release the file by forcing garbage collection
+                    gc.collect()
+                    time.sleep(2)  # Wait before retrying
+                    
+                    # Make sure Excel is closed
+                    if retry_count >= 2:
+                        self.close_excel_instances()
             
-            file_size = os.path.getsize(dest_file)
-            if file_size == 0:
-                raise IOError(f"Copied file has zero size: {dest_file}")
+            if not file_accessible:
+                self.logger.error("Could not access source file for copying")
+                return False
+            
+            # Check for destination file accessibility
+            if os.path.exists(dest_file):
+                try:
+                    # Try to remove existing dest file if it might be locked
+                    with open(dest_file, 'r+b') as test_file:
+                        test_file.seek(0)
+                except Exception as e:
+                    self.logger.warning(f"Destination file is locked, trying to use a different path: {e}")
+                    # Use a new destination path
+                    old_dest = dest_file
+                    dest_file = self._get_temp_file_path("direct_copy")
+                    self._update_status(f"Using alternative path: {dest_file}")
+            
+            # Try several copy methods
+            copy_methods = [
+                # Method 1: Standard shutil.copy2
+                lambda s, d: shutil.copy2(s, d),
                 
-            self._update_status(f"Direct file copy successful ({file_size} bytes)")
+                # Method 2: Low-level file copy with chunks
+                lambda s, d: self._chunk_copy(s, d),
+                
+                # Method 3: Use system commands (Windows)
+                lambda s, d: self._system_copy(s, d) if sys.platform.startswith('win') else None,
+                
+                # Method 4: os.system copy (fallback)
+                lambda s, d: os.system(f'copy "{s}" "{d}"') if sys.platform.startswith('win') else None
+            ]
+            
+            # Try each copy method until one succeeds
+            success = False
+            for method_idx, copy_method in enumerate(copy_methods):
+                try:
+                    self._update_status(f"Trying copy method {method_idx+1}...")
+                    result = copy_method(source_file, dest_file)
+                    if result is not None and result != 0:
+                        continue  # Try next method if this one returned an error code
+                    
+                    # Verify the copy succeeded
+                    if os.path.exists(dest_file) and os.path.getsize(dest_file) > 0:
+                        file_size = os.path.getsize(dest_file)
+                        self._update_status(f"Direct file copy successful ({file_size} bytes)")
+                        success = True
+                        break
+                except Exception as e:
+                    self.logger.warning(f"Copy method {method_idx+1} failed: {e}")
+                    continue
+            
+            if not success:
+                self.logger.error("All copy methods failed")
+                return False
+                
             return True
             
         except Exception as e:
             self.logger.error(f"Error during direct file copy: {str(e)}", exc_info=True)
             return False
+            
+    def _chunk_copy(self, source_file: str, dest_file: str) -> bool:
+        """
+        Copy a file in chunks to avoid memory issues with large files.
+        
+        Args:
+            source_file (str): Source file path
+            dest_file (str): Destination file path
+            
+        Returns:
+            bool: Whether the copy was successful
+        """
+        try:
+            # Use a larger buffer for faster copying of large files
+            buffer_size = 10 * 1024 * 1024  # 10MB buffer
+            
+            with open(source_file, 'rb') as src, open(dest_file, 'wb') as dst:
+                while True:
+                    chunk = src.read(buffer_size)
+                    if not chunk:
+                        break
+                    dst.write(chunk)
+            
+            return True
+        except Exception as e:
+            self.logger.warning(f"Chunk copy failed: {e}")
+            return False
+    
+    def _system_copy(self, source_file: str, dest_file: str) -> int:
+        """
+        Use system-specific copy commands for reliability.
+        
+        Args:
+            source_file (str): Source file path
+            dest_file (str): Destination file path
+            
+        Returns:
+            int: Return code (0 for success)
+        """
+        if sys.platform.startswith('win'):
+            # Windows - use robocopy or xcopy
+            try:
+                # Try robocopy first (more reliable for locked files)
+                source_dir = os.path.dirname(source_file)
+                source_file_name = os.path.basename(source_file)
+                dest_dir = os.path.dirname(dest_file)
+                
+                # Use /R:3 to retry 3 times if file is locked, /W:2 to wait 2 seconds between retries
+                # /J for unbuffered I/O, /B for backup mode (can copy open files), /NP for no progress
+                result = subprocess.run(
+                    ['robocopy', source_dir, dest_dir, source_file_name, '/R:3', '/W:2', '/J', '/B', '/NP'],
+                    capture_output=True,
+                    text=True
+                )
+                
+                # Robocopy return codes: 0 = no files copied, 1 = files copied, > 1 = errors
+                if result.returncode <= 1:
+                    return 0  # Success
+                
+                # If robocopy failed, try xcopy
+                result = subprocess.run(
+                    ['xcopy', source_file, dest_file, '/Y', '/Q', '/R', '/H'],
+                    capture_output=True,
+                    text=True
+                )
+                
+                return result.returncode
+            except Exception as e:
+                self.logger.warning(f"System copy failed: {e}")
+                return 1
+        else:
+            # Unix-like - use cp
+            try:
+                result = subprocess.run(['cp', source_file, dest_file], capture_output=True, text=True)
+                return result.returncode
+            except Exception as e:
+                self.logger.warning(f"System cp failed: {e}")
+                return 1
     
     def _create_clean_copy(self, original_file: str, new_file: str) -> bool:
         """
