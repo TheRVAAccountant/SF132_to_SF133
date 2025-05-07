@@ -233,14 +233,58 @@ def main() -> int:
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
         
+        # Set up Windows-specific integrations if running on Windows
+        if sys.platform.startswith('win'):
+            try:
+                import windows_integration
+                logger.info("Windows-specific enhancements enabled")
+            except ImportError:
+                logger.warning("Windows integration module not available")
+        
+        # Parse command line arguments
+        recover_mode = False
+        file_path = None
+        password = None
+        
+        # Process command line arguments
+        args = sys.argv[1:]
+        i = 0
+        while i < len(args):
+            if args[i] in ('--recover', '-r'):
+                recover_mode = True
+                i += 1
+            elif args[i].startswith('--'):
+                # Skip unknown options and their values
+                i += 2
+            else:
+                # First non-option argument is the file path
+                file_path = args[i]
+                # If there's another argument, it's the password
+                if i + 1 < len(args) and not args[i+1].startswith('--'):
+                    password = args[i+1]
+                break
+        
         # Start the application
         app = ExcelProcessingApplication()
         
+        # If recover mode is enabled and we have a file path
+        if recover_mode and file_path:
+            logger.info(f"Running in recovery mode for file: {file_path}")
+            try:
+                from excel_file_recovery import fix_excel_file_in_use_error
+                success, recovery_path = fix_excel_file_in_use_error(file_path)
+                if success:
+                    logger.info(f"Recovery successful, processing file: {recovery_path}")
+                    return app.run_cli(recovery_path, password)
+                else:
+                    logger.error(f"Recovery failed: {recovery_path}")
+                    return 1
+            except ImportError:
+                logger.error("Recovery modules not available")
+                return 1
+        
         # Check if a file path is provided as argument
-        if len(sys.argv) > 1:
-            file_path = sys.argv[1]
-            # Optional password as second argument
-            password = sys.argv[2] if len(sys.argv) > 2 else None
+        if file_path:
             return app.run_cli(file_path, password)
         else:
             # If no command-line arguments and GUI is available, start in GUI mode
@@ -249,7 +293,7 @@ def main() -> int:
                 return 0
             else:
                 # If no arguments and no GUI, show usage information
-                print("Usage: python main.py [excel_file_path] [optional_password]")
+                print("Usage: python main.py [--recover] [excel_file_path] [optional_password]")
                 return 1
                 
     except Exception as e:

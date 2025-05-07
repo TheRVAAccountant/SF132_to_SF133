@@ -5,6 +5,7 @@ from datetime import datetime
 import threading
 import queue
 import logging
+import sys
 from typing import Callable, Optional
 import os
 
@@ -21,9 +22,22 @@ class ExcelProcessorGUI:
         self.root.geometry("695x400")
         self.root.resizable(True, True)
 
-        # Set window icon
+        # Set window icon if available
         icon_path = "currency_icon.ico"
-        self.root.iconbitmap(icon_path)
+        if os.path.exists(icon_path):
+            try:
+                self.root.iconbitmap(icon_path)
+            except tk.TclError:
+                # On some platforms iconbitmap might not work
+                pass
+
+        # Set up Windows integration if running on Windows
+        if sys.platform.startswith('win'):
+            try:
+                import windows_integration
+                logging.info("Windows integration enabled for GUI")
+            except ImportError:
+                logging.warning("Windows integration module not available")
 
         # Set background color of the main window
         self.root.configure(background='#2e2e2e')
@@ -45,6 +59,9 @@ class ExcelProcessorGUI:
         self.main_frame = ttk.Frame(self.root, style='Custom.TFrame', padding="20")
         self.main_frame.grid(row=0, column=0, sticky="nsew")
         
+        # Initialize menu
+        self._init_menu()
+        
         # Initialize components
         self._init_file_selection()
         self._init_password_input()
@@ -55,6 +72,9 @@ class ExcelProcessorGUI:
         self.start_time: Optional[float] = None
         self.processing_thread: Optional[threading.Thread] = None
         self.queue = queue.Queue()
+        
+        # Recovery mode flag - enabled by default on Windows
+        self.recovery_mode = tk.BooleanVar(value=sys.platform.startswith('win'))
     
     def apply_forest_dark_theme(self):
         """Apply the forest-dark theme to the GUI."""
@@ -155,6 +175,14 @@ class ExcelProcessorGUI:
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
         )
         if filename:
+            # Normalize Windows path if running on Windows
+            if sys.platform.startswith('win'):
+                try:
+                    from win_path_handler import normalize_windows_path
+                    filename = normalize_windows_path(filename)
+                except ImportError:
+                    pass
+            
             self.file_path.set(filename)
             
     def update_progress(self, value: float, message: str):
@@ -201,19 +229,164 @@ class ExcelProcessorGUI:
         # Start progress monitoring
         self.root.after(100, self._check_progress)
         
+    def _init_menu(self):
+        """Initialize the application menu."""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Open Excel File", command=self._browse_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.quit)
+        
+        # Options menu
+        options_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Options", menu=options_menu)
+        
+        # Add recovery mode option (Windows only)
+        if sys.platform.startswith('win'):
+            options_menu.add_checkbutton(
+                label="Enable Recovery Mode",
+                variable=self.recovery_mode,
+                onvalue=True,
+                offvalue=False
+            )
+            
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self._show_about)
+        
+        # Add Windows-specific menu items if on Windows
+        if sys.platform.startswith('win'):
+            tools_menu = tk.Menu(menubar, tearoff=0)
+            menubar.add_cascade(label="Tools", menu=tools_menu)
+            tools_menu.add_command(label="Fix Excel File", command=self._fix_excel_file)
+            tools_menu.add_command(label="Close Excel Instances", command=self._close_excel_instances)
+            
+    def _show_about(self):
+        """Show about dialog."""
+        messagebox.showinfo(
+            "About Excel Processor",
+            "Excel File Processor\n\n"
+            "A tool for processing SF132 and SF133 reconciliation Excel files.\n\n"
+            "Version: 1.0"
+        )
+        
+    def _fix_excel_file(self):
+        """Fix an Excel file with access issues."""
+        if not sys.platform.startswith('win'):
+            messagebox.showinfo("Not Available", "This feature is only available on Windows.")
+            return
+            
+        filename = filedialog.askopenfilename(
+            title="Select Excel File to Fix",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
+        )
+        
+        if not filename:
+            return
+            
+        try:
+            from excel_file_recovery import fix_excel_file_in_use_error
+            
+            self.update_status(f"Attempting to fix Excel file: {filename}...")
+            success, result_path = fix_excel_file_in_use_error(filename)
+            
+            if success:
+                self.update_status(f"Successfully fixed file: {result_path}")
+                messagebox.showinfo("Fix Complete", f"File has been fixed and saved to:\n{result_path}")
+                
+                # Offer to load the fixed file
+                if messagebox.askyesno("Load Fixed File", "Would you like to load the fixed file?"):
+                    self.file_path.set(result_path)
+            else:
+                self.update_status(f"Failed to fix file: {result_path}")
+                messagebox.showerror("Fix Failed", f"Failed to fix file: {result_path}")
+                
+        except ImportError:
+            messagebox.showerror("Not Available", "Excel recovery modules are not available.")
+            
+    def _close_excel_instances(self):
+        """Close all running Excel instances."""
+        if not sys.platform.startswith('win'):
+            messagebox.showinfo("Not Available", "This feature is only available on Windows.")
+            return
+            
+        try:
+            from file_operations_win import close_excel_instances
+            
+            self.update_status("Closing Excel instances...")
+            terminated = close_excel_instances()
+            
+            if terminated:
+                self.update_status(f"Closed {len(terminated)} Excel instance(s)")
+                messagebox.showinfo("Excel Closed", f"Successfully closed {len(terminated)} Excel instance(s).")
+            else:
+                self.update_status("No Excel instances found to close")
+                messagebox.showinfo("Excel Instances", "No Excel instances were found running.")
+                
+        except ImportError:
+            messagebox.showerror("Not Available", "Windows file operation modules are not available.")
+            
     def _processing_worker(self):
         """Worker function for processing the Excel file."""
         try:
-            # This will be replaced with the actual processing function
+            # Check for Windows-specific file handling
+            if sys.platform.startswith('win'):
+                try:
+                    # Import Windows integration tools if available
+                    from file_operations_win import close_excel_instances
+                    # Close any Excel instances before processing
+                    close_excel_instances()
+                    self.queue.put(("status", "Closed any running Excel instances for clean processing"))
+                except ImportError:
+                    self.queue.put(("status", "Windows integration modules not available"))
+            
+            # Call the actual processing function
             if self.process_callback:
-                self.process_callback(
-                    self.file_path.get(),
-                    self.password.get(),
-                    self.queue
-                )
+                # Check if recovery mode should be attempted for Windows
+                if sys.platform.startswith('win') and self.recovery_mode.get():
+                    try:
+                        from excel_file_recovery import process_with_recovery
+                        # Use recovery-enhanced processing
+                        self.queue.put(("status", "Using Windows file recovery enhancements"))
+                        success, result = process_with_recovery(
+                            self.process_callback,
+                            self.file_path.get(),
+                            self.password.get(),
+                            self.queue
+                        )
+                        if not success:
+                            self.queue.put(("error", result))
+                    except ImportError:
+                        # Fall back to regular processing
+                        self.process_callback(
+                            self.file_path.get(),
+                            self.password.get(),
+                            self.queue
+                        )
+                else:
+                    # Regular processing for non-Windows platforms or recovery mode disabled
+                    self.process_callback(
+                        self.file_path.get(),
+                        self.password.get(),
+                        self.queue
+                    )
         except Exception as e:
             self.queue.put(("error", str(e)))
         finally:
+            # Clean up resources if running on Windows
+            if sys.platform.startswith('win'):
+                try:
+                    from file_operations_win import cleanup_all_resources
+                    cleanup_all_resources()
+                    self.queue.put(("status", "Cleaned up Windows resources"))
+                except ImportError:
+                    pass
+                    
             self.queue.put(("done", None))
             
     def _check_progress(self):
