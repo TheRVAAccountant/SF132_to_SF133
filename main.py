@@ -8,6 +8,7 @@ import traceback
 import logging
 import time
 import json
+import pkg_resources
 
 try:
     from gui import ExcelProcessorGUI
@@ -173,7 +174,33 @@ def setup_exception_handling() -> None:
         logger.critical("Uncaught thread exception:", exc_info=(args.exc_type, args.exc_value, args.exc_traceback))
         
     threading.excepthook = handle_thread_exception
+
+def check_dependencies():
+    """Check for required dependencies and their versions."""
+    logger = logging.getLogger("ExcelProcessor")
     
+    # Define required packages and versions
+    requirements = {
+        'openpyxl': '3.0.0',  # Minimum version
+        'pandas': '1.0.0',    # Minimum version
+    }
+    
+    for package, min_version in requirements.items():
+        try:
+            installed_version = pkg_resources.get_distribution(package).version
+            logger.info(f"Found {package} version {installed_version}")
+            
+            # Check if version is sufficient
+            if pkg_resources.parse_version(installed_version) < pkg_resources.parse_version(min_version):
+                logger.warning(f"Warning: {package} version {installed_version} is below recommended {min_version}")
+                print(f"Warning: {package} version {installed_version} is below recommended {min_version}")
+        except pkg_resources.DistributionNotFound:
+            logger.error(f"Required package {package} is not installed")
+            print(f"Error: Required package {package} is not installed")
+            return False
+    
+    return True
+
 @performance_logger("application_startup")
 def main() -> int:
     """
@@ -188,6 +215,9 @@ def main() -> int:
         
         # Set up global exception handling
         setup_exception_handling()
+        
+        # Check dependencies
+        check_dependencies()
         
         # Setup minimal logging for CLI mode
         logger = logging.getLogger("ExcelProcessor")

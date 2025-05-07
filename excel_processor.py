@@ -1,6 +1,6 @@
 import openpyxl
 import win32com.client
-from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment, Color
 from openpyxl.styles.colors import COLOR_INDEX
 from openpyxl.cell import MergedCell
 from openpyxl.utils import get_column_letter
@@ -399,41 +399,55 @@ class ExcelProcessor:
                 # Create target cell and copy value
                 tgt_cell = target_sheet.cell(row=row_idx, column=col_idx, value=src_cell.value)
                 
-                # Copy basic formatting
+                # Copy basic formatting with proper error handling
                 if src_cell.has_style:
-                    # Font
-                    tgt_cell.font = Font(
-                        name=src_cell.font.name,
-                        size=src_cell.font.size,
-                        bold=src_cell.font.bold,
-                        italic=src_cell.font.italic,
-                        color=src_cell.font.color
-                    )
-                    
-                    # Fill
-                    if src_cell.fill and hasattr(src_cell.fill, 'start_color') and src_cell.fill.start_color:
-                        fill_color = src_cell.fill.start_color.rgb or "FFFFFF"
-                        tgt_cell.fill = PatternFill(
-                            fill_type='solid',
-                            start_color=fill_color
+                    try:
+                        # Font
+                        tgt_cell.font = Font(
+                            name=src_cell.font.name,
+                            size=src_cell.font.size,
+                            bold=src_cell.font.bold,
+                            italic=src_cell.font.italic,
+                            color=src_cell.font.color
                         )
+                    except Exception as e:
+                        self.logger.debug(f"Error copying font at {row_idx},{col_idx}: {e}")
                     
-                    # Border
-                    if src_cell.border:
-                        tgt_cell.border = Border(
-                            left=src_cell.border.left,
-                            right=src_cell.border.right,
-                            top=src_cell.border.top,
-                            bottom=src_cell.border.bottom
-                        )
+                    try:
+                        # Fill - with proper Color object creation
+                        if src_cell.fill and hasattr(src_cell.fill, 'start_color') and src_cell.fill.start_color:
+                            fill_color = src_cell.fill.start_color.rgb or "FFFFFF"
+                            # Create a proper Color object from the RGB string
+                            color_obj = Color(rgb=fill_color)
+                            tgt_cell.fill = PatternFill(
+                                fill_type='solid',
+                                start_color=color_obj
+                            )
+                    except Exception as e:
+                        self.logger.debug(f"Error copying fill at {row_idx},{col_idx}: {e}")
                     
-                    # Alignment
-                    if src_cell.alignment:
-                        tgt_cell.alignment = Alignment(
-                            horizontal=src_cell.alignment.horizontal,
-                            vertical=src_cell.alignment.vertical,
-                            wrap_text=src_cell.alignment.wrap_text
-                        )
+                    try:
+                        # Border
+                        if src_cell.border:
+                            tgt_cell.border = Border(
+                                left=src_cell.border.left,
+                                right=src_cell.border.right,
+                                top=src_cell.border.top,
+                                bottom=src_cell.border.bottom
+                            )
+                    except Exception as e:
+                        self.logger.debug(f"Error copying border at {row_idx},{col_idx}: {e}")
+                    
+                    try:
+                        # Alignment
+                        if src_cell.alignment:
+                            tgt_cell.alignment = Alignment(
+                                horizontal=src_cell.alignment.horizontal,
+                                vertical=src_cell.alignment.vertical,
+                                wrap_text=src_cell.alignment.wrap_text
+                            )
+                    except Exception as e:
+                        self.logger.debug(f"Error copying alignment at {row_idx},{col_idx}: {e}")
         
         # We'll deliberately NOT copy merged cells to avoid potential corruption
     
