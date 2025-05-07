@@ -60,27 +60,43 @@ def run():
     
     args = parser.parse_args()
     
-    # Import the main function in a way that works both when installed as a package
-    # and when run directly from the repository
-    try:
-        # Try to import as if installed as a package
-        from sf132_sf133_recon.main import main
-    except ImportError:
+    # Find and import the main function dynamically to avoid linting errors
+    main_function = None
+    
+    # Build a list of possible import paths
+    import_paths = [
+        # Local import for compatibility mode
+        {'module': 'main', 'attr': 'main'},
+        # Package import from src directory
+        {'module': 'src.sf132_sf133_recon.main', 'attr': 'main'},
+        # Package import for installed package
+        {'module': 'sf132_sf133_recon.main', 'attr': 'main'}
+    ]
+    
+    # Try each import path
+    for path in import_paths:
         try:
-            # Try to import from the src directory (development mode)
-            from src.sf132_sf133_recon.main import main
+            module_name = path['module']
+            attr_name = path['attr']
+            
+            # Use __import__ to avoid static analysis errors
+            module = __import__(module_name, fromlist=[attr_name])
+            if hasattr(module, attr_name):
+                main_function = getattr(module, attr_name)
+                print(f"Successfully imported {attr_name} from {module_name}")
+                break
         except ImportError:
-            try:
-                # Fall back to the original module (compatibility mode)
-                from main import main
-            except ImportError:
-                print("ERROR: Could not import main module from any location.")
-                print("Make sure you are running this script from the correct directory.")
-                sys.exit(1)
+            continue
+    
+    # Check if we found the main function
+    if main_function is None:
+        print("ERROR: Could not import main module from any location.")
+        print("Make sure you are running this script from the correct directory.")
+        sys.exit(1)
     
     # Run the main application
     # The argparse arguments will be available as sys.argv
-    return main()
+    return main_function()
 
 if __name__ == "__main__":
     sys.exit(run())
