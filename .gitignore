@@ -54,3 +54,5 @@ $RECYCLE.BIN/
 *.bak
 *.backup
 *.tmp
+
+**/.claude/settings.local.json
