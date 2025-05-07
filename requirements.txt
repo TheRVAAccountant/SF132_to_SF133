@@ -1,0 +1,12 @@
+openpyxl>=3.0.0
+pywin32>=300
+pythoncom>=0.0.1; platform_system=="Windows"
+psutil>=5.9.0
+tkinter  # Usually comes with Python
+pathlib  # Standard library in Python 3
+typing  # Standard library in Python 3
+queue  # Standard library in Python 3
+json  # Standard library in Python 3
+logging  # Standard library in Python 3
+threading  # Standard library in Python 3
+dataclasses  # Standard library in Python 3.7+

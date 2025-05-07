@@ -1,0 +1,774 @@
+INFO:root:Header cell fill color: 22
+INFO:root:Header cell fill color (RGB): 22
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+INFO:root:Header cell fill color (RGB): #000016
+INFO:root:First matching row: 64, Color: #000016
+INFO:root:Header row: 9, Dataframe range: 10 to 63
+INFO:root:['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+INFO:root:['702/40411', '', '', '', '', '', '', '', '', '', None]
+INFO:root:['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+INFO:root:['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+INFO:root:['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+INFO:root:['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 09:01:36,145 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 09:01:49,341 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 09:01:49,342 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 09:01:49,342 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 09:01:49,349 - INFO - Unhid all columns in the sheet.
+2024-10-25 09:01:49,350 - INFO - Unmerged all merged cells.
+2024-10-25 09:01:49,350 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 09:01:49,357 - INFO - First matching row: 64, Color: #000016
+2024-10-25 09:01:49,359 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 09:01:49,361 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 09:01:49,362 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 09:01:49,367 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 09:01:49,372 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 09:01:49,374 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 09:01:49,375 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 09:01:49,376 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 09:01:49,377 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 09:01:58,587 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 09:02:08,878 - INFO - Opened workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 09:02:09,120 - INFO - Row 11: Difference = 702/404111000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,159 - INFO - Row 12: Difference = 702/404111021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,218 - INFO - Row 13: Difference = 702/404111033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,287 - INFO - Row 14: Difference = 702/404111700N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,477 - INFO - Row 16: Difference = 702/408601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,552 - INFO - Row 17: Difference = 702/408601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,661 - INFO - Row 18: Difference = 702/408601033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,743 - INFO - Row 19: Difference = 702/408601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:09,860 - INFO - Row 21: Difference = 702/408621000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:10,018 - INFO - Row 22: Difference = 702/408621021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:10,673 - INFO - Row 23: Difference = 702/408621033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:10,770 - INFO - Row 24: Difference = 702/408621131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:10,980 - INFO - Row 26: Difference = 703/408611000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,068 - INFO - Row 27: Difference = 703/408611012N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,117 - INFO - Row 28: Difference = 703/408611021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,228 - INFO - Row 29: Difference = 703/408611033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,355 - INFO - Row 30: Difference = 703/408611131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,521 - INFO - Row 32: Difference = 703/504111000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,575 - INFO - Row 33: Difference = 703/504111021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,622 - INFO - Row 34: Difference = 703/504111033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,703 - INFO - Row 35: Difference = 703/504111701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,833 - INFO - Row 37: Difference = 703/508601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,883 - INFO - Row 38: Difference = 703/508601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:11,943 - INFO - Row 39: Difference = 703/508601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,086 - INFO - Row 41: Difference = 703/508621000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,132 - INFO - Row 42: Difference = 703/508621021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,200 - INFO - Row 43: Difference = 703/508621131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,442 - INFO - Row 45: Difference = 704/508611100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,637 - INFO - Row 46: Difference = 704/508611700N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,735 - INFO - Row 47: Difference = 704/508611701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:12,918 - INFO - Row 49: Difference = 704/604111100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,144 - INFO - Row 50: Difference = 704/604111701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,431 - INFO - Row 52: Difference = 704/608601100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,624 - INFO - Row 54: Difference = 704/608621100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,680 - INFO - Row 55: Difference = 704/608621701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,858 - INFO - Row 57: Difference = 70408611100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:13,948 - INFO - Row 58: Difference = 70408611120N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:14,024 - INFO - Row 59: Difference = 70408611121N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:14,128 - INFO - Row 61: Difference = 70X08601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:14,186 - INFO - Row 62: Difference = 70X08601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:02:14,245 - INFO - Row 63: Difference = 70X08601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:06:52,787 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 677, in properties
+    yield self
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1164, in save
+    self.impl.save(path, password=password)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 872, in save
+    self.xl.Save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 122, in __call__
+    v = self.__method(*args, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\JERON~1.CRO\AppData\Local\Temp\1\gen_py\3.12\00020813-0000-0000-C000-000000000046x0x1x9\_Workbook.py", line 280, in Save
+    return self._oleobj_.InvokeTypes(283, LCID, 1, (24, 0), (),)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023170, 'The remote procedure call failed.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 229, in main
+    wb.save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1163, in save
+    with self.app.properties(display_alerts=False):
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 680, in properties
+    setattr(self, attribute, value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 443, in display_alerts
+    self.impl.display_alerts = value
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 652, in display_alerts
+    self.xl.DisplayAlerts = value
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 161, in __setattr__
+    return setattr(self._inner, key, value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_win32patch.py", line 65, in __setattr__
+    d.__setattr__(attr, value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 568, in __setattr__
+    self._oleobj_.Invoke(*(args + (value,) + defArgs))
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:06:52,804 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 235, in main
+    app.quit()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 405, in quit
+    return self.impl.quit()
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 620, in quit
+    self.xl.DisplayAlerts = False
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 161, in __setattr__
+    return setattr(self._inner, key, value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 568, in __setattr__
+    self._oleobj_.Invoke(*(args + (value,) + defArgs))
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:09:27,350 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 09:09:37,115 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 09:09:37,115 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 09:09:37,116 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 09:09:37,116 - INFO - Unmerged all merged cells.
+2024-10-25 09:09:37,124 - INFO - Unhid all columns in the sheet.
+2024-10-25 09:09:37,125 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 09:09:37,129 - INFO - First matching row: 64, Color: #000016
+2024-10-25 09:09:37,129 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 09:09:37,131 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 09:09:37,131 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 09:09:37,132 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 09:09:37,133 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 09:09:37,135 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 09:09:37,136 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 09:09:37,138 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 09:09:37,138 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 09:09:47,394 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 09:10:05,850 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 09:10:12,235 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 09:10:12,561 - INFO - Row 11: Difference = 702/404111000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:12,651 - INFO - Row 12: Difference = 702/404111021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:12,751 - INFO - Row 13: Difference = 702/404111033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:12,830 - INFO - Row 14: Difference = 702/404111700N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:12,971 - INFO - Row 16: Difference = 702/408601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,025 - INFO - Row 17: Difference = 702/408601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,098 - INFO - Row 18: Difference = 702/408601033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,171 - INFO - Row 19: Difference = 702/408601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,317 - INFO - Row 21: Difference = 702/408621000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,382 - INFO - Row 22: Difference = 702/408621021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,453 - INFO - Row 23: Difference = 702/408621033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,511 - INFO - Row 24: Difference = 702/408621131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,593 - INFO - Row 26: Difference = 703/408611000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,650 - INFO - Row 27: Difference = 703/408611012N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,713 - INFO - Row 28: Difference = 703/408611021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,799 - INFO - Row 29: Difference = 703/408611033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,842 - INFO - Row 30: Difference = 703/408611131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,928 - INFO - Row 32: Difference = 703/504111000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:13,977 - INFO - Row 33: Difference = 703/504111021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,012 - INFO - Row 34: Difference = 703/504111033N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,045 - INFO - Row 35: Difference = 703/504111701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,112 - INFO - Row 37: Difference = 703/508601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,140 - INFO - Row 38: Difference = 703/508601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,172 - INFO - Row 39: Difference = 703/508601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,236 - INFO - Row 41: Difference = 703/508621000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,274 - INFO - Row 42: Difference = 703/508621021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,335 - INFO - Row 43: Difference = 703/508621131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,486 - INFO - Row 45: Difference = 704/508611100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,535 - INFO - Row 46: Difference = 704/508611700N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,581 - INFO - Row 47: Difference = 704/508611701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,659 - INFO - Row 49: Difference = 704/604111100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,697 - INFO - Row 50: Difference = 704/604111701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,778 - INFO - Row 52: Difference = 704/608601100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,869 - INFO - Row 54: Difference = 704/608621100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:14,911 - INFO - Row 55: Difference = 704/608621701N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,038 - INFO - Row 57: Difference = 70408611100N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,087 - INFO - Row 58: Difference = 70408611120N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,128 - INFO - Row 59: Difference = 70408611121N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,209 - INFO - Row 61: Difference = 70X08601000N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,249 - INFO - Row 62: Difference = 70X08601021N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,289 - INFO - Row 63: Difference = 70X08601131N, Include in CFO Letter = None, Explanation = None
+2024-10-25 09:10:15,289 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 09:10:15,293 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 09:11:40,874 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 677, in properties
+    yield self
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1164, in save
+    self.impl.save(path, password=password)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 872, in save
+    self.xl.Save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 122, in __call__
+    v = self.__method(*args, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\JERON~1.CRO\AppData\Local\Temp\1\gen_py\3.12\00020813-0000-0000-C000-000000000046x0x1x9\_Workbook.py", line 280, in Save
+    return self._oleobj_.InvokeTypes(283, LCID, 1, (24, 0), (),)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023170, 'The remote procedure call failed.', None, None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 43, in save_with_retry
+    wb.save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1163, in save
+    with self.app.properties(display_alerts=False):
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 680, in properties
+    setattr(self, attribute, value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 443, in display_alerts
+    self.impl.display_alerts = value
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 652, in display_alerts
+    self.xl.DisplayAlerts = value
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 161, in __setattr__
+    return setattr(self._inner, key, value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_win32patch.py", line 65, in __setattr__
+    d.__setattr__(attr, value)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 568, in __setattr__
+    self._oleobj_.Invoke(*(args + (value,) + defArgs))
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:11:40,895 - INFO - Retrying to save workbook after 5 seconds.
+2024-10-25 09:11:45,950 - INFO - Attempt 2 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 09:11:46,082 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 43, in save_with_retry
+    wb.save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1163, in save
+    with self.app.properties(display_alerts=False):
+         ^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1123, in app
+    return App(impl=self.impl.app)
+                    ^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 845, in app
+    return App(xl=self.xl.Application)
+                  ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 199, in __getattr__
+    v = getattr(self._inner, item)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_win32patch.py", line 55, in __getattr__
+    return getattr(d, attr)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 558, in __getattr__
+    return self._ApplyTypes_(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 549, in _ApplyTypes_
+    self._oleobj_.InvokeTypes(dispid, 0, wFlags, retType, argTypes, *args),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:11:46,087 - INFO - Retrying to save workbook after 5 seconds.
+2024-10-25 09:11:51,108 - INFO - Attempt 3 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 09:11:51,179 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 43, in save_with_retry
+    wb.save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1163, in save
+    with self.app.properties(display_alerts=False):
+         ^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1123, in app
+    return App(impl=self.impl.app)
+                    ^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 845, in app
+    return App(xl=self.xl.Application)
+                  ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 199, in __getattr__
+    v = getattr(self._inner, item)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_win32patch.py", line 55, in __getattr__
+    return getattr(d, attr)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 558, in __getattr__
+    return self._ApplyTypes_(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 549, in _ApplyTypes_
+    self._oleobj_.InvokeTypes(dispid, 0, wFlags, retType, argTypes, *args),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:11:51,183 - ERROR - Failed to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx after 3 attempts.
+2024-10-25 09:11:51,183 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 284, in main
+    save_with_retry(wb, new_file)
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 43, in save_with_retry
+    wb.save()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1163, in save
+    with self.app.properties(display_alerts=False):
+         ^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 1123, in app
+    return App(impl=self.impl.app)
+                    ^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 845, in app
+    return App(xl=self.xl.Application)
+                  ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 199, in __getattr__
+    v = getattr(self._inner, item)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_win32patch.py", line 55, in __getattr__
+    return getattr(d, attr)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 558, in __getattr__
+    return self._ApplyTypes_(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 549, in _ApplyTypes_
+    self._oleobj_.InvokeTypes(dispid, 0, wFlags, retType, argTypes, *args),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 09:11:51,211 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 291, in main
+    app.quit()
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\main.py", line 405, in quit
+    return self.impl.quit()
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 620, in quit
+    self.xl.DisplayAlerts = False
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\xlwings\_xlwindows.py", line 161, in __setattr__
+    return setattr(self._inner, key, value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\win32com\client\__init__.py", line 568, in __setattr__
+    self._oleobj_.Invoke(*(args + (value,) + defArgs))
+pywintypes.com_error: (-2147023174, 'The RPC server is unavailable.', None, None)
+2024-10-25 10:21:59,570 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 10:22:12,671 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 10:22:12,672 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 10:22:12,672 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 10:22:12,679 - INFO - Unhid all columns in the sheet.
+2024-10-25 10:22:12,680 - INFO - Unmerged all merged cells.
+2024-10-25 10:22:12,681 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 10:22:12,682 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 10:22:12,685 - INFO - First matching row: 64, Color: #000016
+2024-10-25 10:22:12,686 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 10:22:12,689 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 10:22:12,690 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 10:22:12,690 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 10:22:12,692 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 10:22:12,694 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 10:22:12,694 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 10:22:12,696 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 10:22:12,697 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 10:22:23,681 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 10:22:29,918 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 10:22:34,406 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 10:22:34,578 - INFO - Row 11: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:34,675 - INFO - Row 12: Difference = 797.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:34,741 - INFO - Row 13: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:34,861 - INFO - Row 14: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,010 - INFO - Row 16: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,071 - INFO - Row 17: Difference = 617.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:35,132 - INFO - Row 18: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,195 - INFO - Row 19: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,308 - INFO - Row 21: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,352 - INFO - Row 22: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,426 - INFO - Row 23: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,509 - INFO - Row 24: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,634 - INFO - Row 26: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:35,725 - INFO - Row 27: Difference = 73.0, Include in CFO Letter = N, Explanation = SF132 line 1012 not included on apportionment for transfer out
+2024-10-25 10:22:35,796 - INFO - Row 28: Difference = 1622.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:35,870 - INFO - Row 29: Difference = 2.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:35,917 - INFO - Row 30: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,085 - INFO - Row 32: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,167 - INFO - Row 33: Difference = 459.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:36,276 - INFO - Row 34: Difference = -263.0, Include in CFO Letter = N, Explanation = SF133 column is not accurate. PER PD12 SF133 FINAL - 262.78 Screen shot Provided on SF132 Tab
+2024-10-25 10:22:36,387 - INFO - Row 35: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,530 - INFO - Row 37: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,616 - INFO - Row 38: Difference = 1645.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:36,663 - INFO - Row 39: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,754 - INFO - Row 41: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,812 - INFO - Row 42: Difference = 10.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 10:22:36,870 - INFO - Row 43: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:36,977 - INFO - Row 45: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,034 - INFO - Row 46: Difference = 326.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 10:22:37,105 - INFO - Row 47: Difference = 2092.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 10:22:37,198 - INFO - Row 49: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,253 - INFO - Row 50: Difference = 19.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 10:22:37,339 - INFO - Row 52: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,411 - INFO - Row 54: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,458 - INFO - Row 55: Difference = 248.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 10:22:37,534 - INFO - Row 57: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,576 - INFO - Row 58: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,611 - INFO - Row 59: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,675 - INFO - Row 61: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,720 - INFO - Row 62: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,756 - INFO - Row 63: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 10:22:37,756 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 10:22:37,757 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 10:22:38,973 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully on attempt 1.
+2024-10-25 10:22:38,974 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully with xlwings.
+2024-10-25 10:22:39,191 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx closed successfully with xlwings.
+2024-10-25 10:22:41,083 - INFO - Quit xlwings App successfully.
+2024-10-25 10:58:08,748 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 10:58:30,362 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 10:58:30,362 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 10:58:30,363 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 10:58:30,373 - INFO - Unhid all columns in the sheet.
+2024-10-25 10:58:30,374 - INFO - Unmerged all merged cells.
+2024-10-25 10:58:30,375 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 10:58:30,376 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 10:58:30,381 - INFO - First matching row: 64, Color: #000016
+2024-10-25 10:58:30,382 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 10:58:30,386 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 257, in main
+    sheet.column_dimensions[new_header_column].width = 20
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\openpyxl\utils\bound_dictionary.py", line 25, in __getitem__
+    setattr(value, self.reference, key)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\openpyxl\descriptors\base.py", line 46, in __set__
+    raise TypeError(msg)
+TypeError: <class 'openpyxl.worksheet.dimensions.ColumnDimension'>.index should be <class 'str'> but value is <class 'openpyxl.styles.fonts.Font'>
+2024-10-25 10:58:30,406 - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "c:\Users\Jeron.Crooks\VSCode\SF132_to_SF133\file_operations2.py", line 257, in main
+    sheet.column_dimensions[new_header_column].width = 20
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\openpyxl\utils\bound_dictionary.py", line 25, in __getitem__
+    setattr(value, self.reference, key)
+  File "C:\Users\Jeron.Crooks\AppData\Local\anaconda3\Lib\site-packages\openpyxl\descriptors\base.py", line 46, in __set__
+    raise TypeError(msg)
+TypeError: <class 'openpyxl.worksheet.dimensions.ColumnDimension'>.index should be <class 'str'> but value is <class 'openpyxl.styles.fonts.Font'>
+2024-10-25 11:04:47,768 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:04:55,670 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:04:55,671 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:04:55,671 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:04:55,674 - INFO - Unhid all columns in the sheet.
+2024-10-25 11:04:55,676 - INFO - Unmerged all merged cells.
+2024-10-25 11:04:55,676 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 11:04:55,677 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 11:04:55,679 - INFO - First matching row: 64, Color: #000016
+2024-10-25 11:04:55,679 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 11:04:55,680 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 11:04:55,681 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 11:04:55,682 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 11:04:55,682 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 11:04:55,684 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 11:04:55,685 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 11:04:55,686 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 11:04:55,686 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 11:05:02,520 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 11:05:08,021 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:05:11,779 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 11:05:11,861 - INFO - Row 11: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:11,919 - INFO - Row 12: Difference = 797.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:11,965 - INFO - Row 13: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,056 - INFO - Row 14: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,151 - INFO - Row 16: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,233 - INFO - Row 17: Difference = 617.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:12,276 - INFO - Row 18: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,326 - INFO - Row 19: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,405 - INFO - Row 21: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,452 - INFO - Row 22: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,495 - INFO - Row 23: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,531 - INFO - Row 24: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:12,942 - INFO - Row 26: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:13,180 - INFO - Row 27: Difference = 73.0, Include in CFO Letter = N, Explanation = SF132 line 1012 not included on apportionment for transfer out
+2024-10-25 11:05:13,299 - INFO - Row 28: Difference = 1622.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:13,421 - INFO - Row 29: Difference = 2.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:13,578 - INFO - Row 30: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:13,792 - INFO - Row 32: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:13,890 - INFO - Row 33: Difference = 459.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:13,956 - INFO - Row 34: Difference = -263.0, Include in CFO Letter = N, Explanation = SF133 column is not accurate. PER PD12 SF133 FINAL - 262.78 Screen shot Provided on SF132 Tab
+2024-10-25 11:05:14,022 - INFO - Row 35: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,150 - INFO - Row 37: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,226 - INFO - Row 38: Difference = 1645.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:14,275 - INFO - Row 39: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,359 - INFO - Row 41: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,420 - INFO - Row 42: Difference = 10.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:05:14,464 - INFO - Row 43: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,547 - INFO - Row 45: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,594 - INFO - Row 46: Difference = 326.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:05:14,657 - INFO - Row 47: Difference = 2092.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:05:14,730 - INFO - Row 49: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,770 - INFO - Row 50: Difference = 19.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:05:14,841 - INFO - Row 52: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,909 - INFO - Row 54: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:14,958 - INFO - Row 55: Difference = 248.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:05:15,030 - INFO - Row 57: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,067 - INFO - Row 58: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,205 - INFO - Row 59: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,288 - INFO - Row 61: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,325 - INFO - Row 62: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,359 - INFO - Row 63: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:05:15,359 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:05:15,359 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 11:05:16,207 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully on attempt 1.
+2024-10-25 11:05:16,207 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully with xlwings.
+2024-10-25 11:05:16,612 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx closed successfully with xlwings.
+2024-10-25 11:05:18,022 - INFO - Quit xlwings App successfully.
+2024-10-25 11:09:31,140 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:09:39,393 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:09:39,393 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:09:39,393 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:09:39,400 - INFO - Unhid all columns in the sheet.
+2024-10-25 11:09:39,400 - INFO - Unmerged all merged cells.
+2024-10-25 11:09:39,401 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 11:09:39,402 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 11:09:39,405 - INFO - First matching row: 64, Color: #000016
+2024-10-25 11:09:39,405 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 11:09:39,416 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 11:09:39,416 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 11:09:39,419 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 11:09:39,420 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 11:09:39,421 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 11:09:39,422 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 11:09:39,424 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 11:09:39,424 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 11:09:47,295 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 11:09:52,656 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:09:57,124 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 11:09:57,218 - INFO - Row 11: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,325 - INFO - Row 12: Difference = 797.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:57,381 - INFO - Row 13: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,419 - INFO - Row 14: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,510 - INFO - Row 16: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,581 - INFO - Row 17: Difference = 617.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:57,634 - INFO - Row 18: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,671 - INFO - Row 19: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,745 - INFO - Row 21: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,782 - INFO - Row 22: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,835 - INFO - Row 23: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,893 - INFO - Row 24: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:57,975 - INFO - Row 26: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,035 - INFO - Row 27: Difference = 73.0, Include in CFO Letter = N, Explanation = SF132 line 1012 not included on apportionment for transfer out
+2024-10-25 11:09:58,105 - INFO - Row 28: Difference = 1622.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:58,157 - INFO - Row 29: Difference = 2.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:58,200 - INFO - Row 30: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,287 - INFO - Row 32: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,361 - INFO - Row 33: Difference = 459.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:58,440 - INFO - Row 34: Difference = -263.0, Include in CFO Letter = N, Explanation = SF133 column is not accurate. PER PD12 SF133 FINAL - 262.78 Screen shot Provided on SF132 Tab
+2024-10-25 11:09:58,479 - INFO - Row 35: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,710 - INFO - Row 37: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,764 - INFO - Row 38: Difference = 1645.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:58,804 - INFO - Row 39: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,876 - INFO - Row 41: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:58,933 - INFO - Row 42: Difference = 10.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:09:58,967 - INFO - Row 43: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,032 - INFO - Row 45: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,083 - INFO - Row 46: Difference = 326.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:09:59,140 - INFO - Row 47: Difference = 2092.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:09:59,261 - INFO - Row 49: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,341 - INFO - Row 50: Difference = 19.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:09:59,468 - INFO - Row 52: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,562 - INFO - Row 54: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,623 - INFO - Row 55: Difference = 248.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:09:59,729 - INFO - Row 57: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,773 - INFO - Row 58: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,829 - INFO - Row 59: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,923 - INFO - Row 61: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:09:59,985 - INFO - Row 62: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:10:00,063 - INFO - Row 63: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:10:00,064 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:10:00,064 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 11:10:01,421 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully on attempt 1.
+2024-10-25 11:10:01,422 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully with xlwings.
+2024-10-25 11:10:01,633 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx closed successfully with xlwings.
+2024-10-25 11:10:03,789 - INFO - Quit xlwings App successfully.
+2024-10-25 11:15:17,573 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:15:26,882 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 11:15:26,882 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:15:26,882 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 11:15:26,886 - INFO - Unhid all columns in the sheet.
+2024-10-25 11:15:26,886 - INFO - Unmerged all merged cells.
+2024-10-25 11:15:26,887 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 11:15:26,888 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 11:15:26,891 - INFO - First matching row: 64, Color: #000016
+2024-10-25 11:15:26,892 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 11:15:26,902 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 11:15:26,903 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 11:15:26,903 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 11:15:26,904 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 11:15:26,905 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 11:15:26,906 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 11:15:26,908 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 11:15:26,908 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 11:15:33,326 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 11:15:39,018 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:15:42,977 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 11:15:43,096 - INFO - Row 11: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,193 - INFO - Row 12: Difference = 797.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:43,254 - INFO - Row 13: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,309 - INFO - Row 14: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,488 - INFO - Row 16: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,605 - INFO - Row 17: Difference = 617.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:43,658 - INFO - Row 18: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,703 - INFO - Row 19: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,777 - INFO - Row 21: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,811 - INFO - Row 22: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,867 - INFO - Row 23: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,904 - INFO - Row 24: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:43,973 - INFO - Row 26: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,035 - INFO - Row 27: Difference = 73.0, Include in CFO Letter = N, Explanation = SF132 line 1012 not included on apportionment for transfer out
+2024-10-25 11:15:44,080 - INFO - Row 28: Difference = 1622.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:44,138 - INFO - Row 29: Difference = 2.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:44,200 - INFO - Row 30: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,297 - INFO - Row 32: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,347 - INFO - Row 33: Difference = 459.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:44,396 - INFO - Row 34: Difference = -263.0, Include in CFO Letter = N, Explanation = SF133 column is not accurate. PER PD12 SF133 FINAL - 262.78 Screen shot Provided on SF132 Tab
+2024-10-25 11:15:44,435 - INFO - Row 35: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,510 - INFO - Row 37: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,559 - INFO - Row 38: Difference = 1645.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:44,593 - INFO - Row 39: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,673 - INFO - Row 41: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,730 - INFO - Row 42: Difference = 10.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 11:15:44,767 - INFO - Row 43: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,847 - INFO - Row 45: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:44,904 - INFO - Row 46: Difference = 326.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:15:44,964 - INFO - Row 47: Difference = 2092.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:15:45,046 - INFO - Row 49: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,107 - INFO - Row 50: Difference = 19.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:15:45,183 - INFO - Row 52: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,259 - INFO - Row 54: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,419 - INFO - Row 55: Difference = 248.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 11:15:45,493 - INFO - Row 57: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,527 - INFO - Row 58: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,565 - INFO - Row 59: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,639 - INFO - Row 61: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,673 - INFO - Row 62: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,716 - INFO - Row 63: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 11:15:45,716 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 11:15:45,716 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 11:15:46,541 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully on attempt 1.
+2024-10-25 11:15:46,541 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully with xlwings.
+2024-10-25 11:15:46,718 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx closed successfully with xlwings.
+2024-10-25 11:15:48,026 - INFO - Quit xlwings App successfully.
+2024-10-25 12:00:05,569 - INFO - Copied 10-18-2024 CWMD PD12 SEP-24 SF132-SF133Recon-review.xlsx to WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 12:00:20,239 - INFO - Loaded workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx
+2024-10-25 12:00:20,242 - INFO - Accessed sheet: SF132 to SF133 Reconciliation
+2024-10-25 12:00:20,242 - INFO - Unprotected sheet: SF132 to SF133 Reconciliation
+2024-10-25 12:00:20,255 - INFO - Unhid all columns in the sheet.
+2024-10-25 12:00:20,256 - INFO - Unmerged all merged cells.
+2024-10-25 12:00:20,258 - INFO - Identified columns - Difference: 6, Include in CFO Cert Letter: 7, Explanation: 8
+2024-10-25 12:00:20,378 - INFO - Header cell fill color (RGB): #000016
+2024-10-25 12:00:20,387 - INFO - First matching row: 64, Color: #000016
+2024-10-25 12:00:20,388 - INFO - Header row: 9, Dataframe range: 10 to 63
+2024-10-25 12:00:20,418 - INFO - Added and formatted 'DO Comments' column at K.
+2024-10-25 12:00:20,457 - INFO - ['TAFS', 'SF132 Line', 'SF132 Line Description', 'SF133 Amount', 'SF132 Amount', 'Difference', 'Include in CFO Cert Letter', 'Explanation', 'TAFS', 'TAFS/Line/Cert Letter', 'DO Comments']
+2024-10-25 12:00:20,459 - INFO - ['702/40411', '', '', '', '', '', '', '', '', '', None]
+2024-10-25 12:00:20,464 - INFO - ['', 1000, 'Unobligated balance brought forward, Oct 1', 3133675.99, 3134, '=IF(AND(ISBLANK(D11), ISBLANK(E11)), "", ROUND((D11/1000), 0) - E11)', '=IF(ABS(F11)>0, "Y", "N")', '=IF(F11>0, "Explain any difference in column F and also include explanation in a CFO Cert Letter", IF(F11=0, "", "Explain any difference in column F"))', '702/40411', '=_xlfn.CONCAT("702/404111000", G11)', None]
+2024-10-25 12:00:20,467 - INFO - ['', 1021, 'Recoveries of prior year unpaid obligations', 2853905.05, 2057, '=IF(AND(ISBLANK(D12), ISBLANK(E12)), "", ROUND((D12/1000), 0) - E12)', 'N', 'Additional deobligations occurred after apportionment', '702/40411', '702/404111021N', None]
+2024-10-25 12:00:20,469 - INFO - ['', 1033, 'Recoveries of prior year paid obligations', 13456.9, 13, '=IF(AND(ISBLANK(D13), ISBLANK(E13)), "", ROUND((D13/1000), 0) - E13)', 'N', '=IF(F13>0, "Explain any difference in column F", "")', '702/40411', '702/404111033N', None]
+2024-10-25 12:00:20,471 - INFO - ['', 1700, 'Collected', 0, 0, '=IF(AND(ISBLANK(D14), ISBLANK(E14)), "", ROUND((D14/1000), 0) - E14)', 'N', '=IF(F14>0, "Explain any difference in column F", "")', '702/40411', '702/404111700N', None]
+2024-10-25 12:00:20,472 - INFO - Printed sample of the first 5 rows of the dataframe.
+2024-10-25 12:00:32,024 - INFO - Saved changes to WMD FY24 Q4 SF132to133 Recon - DO.xlsx using openpyxl.
+2024-10-25 12:00:40,807 - INFO - Opening workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 12:00:47,649 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx opened successfully with xlwings.
+2024-10-25 12:00:47,862 - INFO - Row 11: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:48,425 - INFO - Row 12: Difference = 797.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:49,162 - INFO - Row 13: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:49,367 - INFO - Row 14: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:49,678 - INFO - Row 16: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:49,826 - INFO - Row 17: Difference = 617.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:49,945 - INFO - Row 18: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:50,468 - INFO - Row 19: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:50,778 - INFO - Row 21: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:50,933 - INFO - Row 22: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:50,997 - INFO - Row 23: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,057 - INFO - Row 24: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,165 - INFO - Row 26: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,245 - INFO - Row 27: Difference = 73.0, Include in CFO Letter = N, Explanation = SF132 line 1012 not included on apportionment for transfer out
+2024-10-25 12:00:51,318 - INFO - Row 28: Difference = 1622.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:51,374 - INFO - Row 29: Difference = 2.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:51,410 - INFO - Row 30: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,493 - INFO - Row 32: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,565 - INFO - Row 33: Difference = 459.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:51,666 - INFO - Row 34: Difference = -263.0, Include in CFO Letter = N, Explanation = SF133 column is not accurate. PER PD12 SF133 FINAL - 262.78 Screen shot Provided on SF132 Tab
+2024-10-25 12:00:51,725 - INFO - Row 35: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,862 - INFO - Row 37: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:51,935 - INFO - Row 38: Difference = 1645.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:51,980 - INFO - Row 39: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,057 - INFO - Row 41: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,145 - INFO - Row 42: Difference = 10.0, Include in CFO Letter = N, Explanation = Additional deobligations occurred after apportionment
+2024-10-25 12:00:52,210 - INFO - Row 43: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,329 - INFO - Row 45: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,437 - INFO - Row 46: Difference = 326.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 12:00:52,508 - INFO - Row 47: Difference = 2092.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 12:00:52,589 - INFO - Row 49: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,644 - INFO - Row 50: Difference = 19.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 12:00:52,742 - INFO - Row 52: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,855 - INFO - Row 54: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:52,926 - INFO - Row 55: Difference = 248.0, Include in CFO Letter = N, Explanation = Collection occurred after approved apportionment via approved anticipiated Reimbursable Line 1740
+2024-10-25 12:00:53,035 - INFO - Row 57: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,087 - INFO - Row 58: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,147 - INFO - Row 59: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,235 - INFO - Row 61: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,322 - INFO - Row 62: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,379 - INFO - Row 63: Difference = 0.0, Include in CFO Letter = N, Explanation = None
+2024-10-25 12:00:53,379 - INFO - Attempting to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx with xlwings.
+2024-10-25 12:00:53,379 - INFO - Attempt 1 to save workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx.
+2024-10-25 12:00:54,925 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully on attempt 1.
+2024-10-25 12:00:54,926 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx saved successfully with xlwings.
+2024-10-25 12:00:55,243 - INFO - Workbook WMD FY24 Q4 SF132to133 Recon - DO.xlsx closed successfully with xlwings.
+2024-10-25 12:00:57,783 - INFO - Quit xlwings App successfully.
