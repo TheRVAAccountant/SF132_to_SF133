@@ -62,21 +62,30 @@ def run():
     
     # Import the main function in a way that works both when installed as a package
     # and when run directly from the repository
-    try:
-        # Try to import as if installed as a package
-        from sf132_sf133_recon.main import main
-    except ImportError:
+    main = None
+    
+    # Try different import paths
+    import_paths = [
+        # Regular import for when module is installed
+        lambda: __import__('sf132_sf133_recon.main').main.main,
+        # Import from src for development mode
+        lambda: __import__('src.sf132_sf133_recon.main').sf132_sf133_recon.main.main,
+        # Direct import for compatibility mode
+        lambda: __import__('main').main
+    ]
+    
+    # Try each import path until one works
+    for import_func in import_paths:
         try:
-            # Try to import from the src directory (development mode)
-            from src.sf132_sf133_recon.main import main
-        except ImportError:
-            try:
-                # Fall back to the original module (compatibility mode)
-                from main import main
-            except ImportError:
-                print("ERROR: Could not import main module from any location.")
-                print("Make sure you are running this script from the correct directory.")
-                sys.exit(1)
+            main = import_func()
+            break
+        except (ImportError, AttributeError):
+            continue
+    
+    if main is None:
+        print("ERROR: Could not import main module from any location.")
+        print("Make sure you are running this script from the correct directory.")
+        sys.exit(1)
     
     # Run the main application
     # The argparse arguments will be available as sys.argv
