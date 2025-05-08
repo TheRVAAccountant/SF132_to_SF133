@@ -781,14 +781,34 @@ class ExcelProcessor:
                         self.logger.debug(f"Error copying font at {row_idx},{col_idx}: {e}")
                     
                     try:
-                        # Fill - with proper Color object creation
+                        # Fill - with proper handling to avoid black fills
                         if src_cell.fill and hasattr(src_cell.fill, 'start_color') and src_cell.fill.start_color:
-                            fill_color = src_cell.fill.start_color.rgb or "FFFFFF"
-                            # Create a proper Color object from the RGB string
-                            color_obj = Color(rgb=fill_color)
+                            # Get the fill type from source
+                            fill_type = getattr(src_cell.fill, 'fill_type', 'solid')
+                            
+                            # Skip empty fills
+                            if fill_type == 'none' or fill_type is None:
+                                continue
+                                
+                            # Get the RGB color
+                            fill_color = src_cell.fill.start_color.rgb
+                            
+                            # Skip black colors (000000) or None values
+                            if not fill_color or fill_color == "00000000" or fill_color == "FF000000" or fill_color == "000000":
+                                continue
+                                
+                            # Default to white if color is invalid
+                            if not isinstance(fill_color, str) or len(fill_color) < 6:
+                                fill_color = "FFFFFF"
+                                
+                            # Ensure proper format by removing alpha channel if present
+                            if len(fill_color) == 8 and fill_color.startswith("FF"):
+                                fill_color = fill_color[2:]
+                                
+                            # Apply the fill directly with string color (more reliable than Color object)
                             tgt_cell.fill = PatternFill(
                                 fill_type='solid',
-                                start_color=color_obj
+                                start_color=fill_color
                             )
                     except Exception as e:
                         self.logger.debug(f"Error copying fill at {row_idx},{col_idx}: {e}")
@@ -1993,7 +2013,7 @@ class ExcelProcessor:
         new_header_cell = sheet.cell(row=header_row, column=last_col + 1)
         new_header_cell.value = "DO Comments"
         
-        # Format the header cell
+        # Format the header cell with explicit colors (no Color objects)
         new_header_cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
         new_header_cell.font = Font(color="FF0000", bold=True, size=11, name="Calibri")
         new_header_cell.border = Border(
@@ -2011,6 +2031,9 @@ class ExcelProcessor:
         # Set column width
         col_letter = get_column_letter(last_col + 1)
         sheet.column_dimensions[col_letter].width = 25
+        
+        # Log the successful addition of DO Comments column
+        self.logger.info(f"Added DO Comments column at position {last_col + 1} (column {col_letter})")
     
     def _process_rows_with_openpyxl(self, sheet, column_indexes: Dict[str, int], matching_row: int) -> None:
         """
@@ -2021,11 +2044,20 @@ class ExcelProcessor:
             column_indexes: Column index mapping
             matching_row: Last row to process
         """
+        # Get the last column - this should be the DO Comments column we added
         last_col = sheet.max_column
         comment_col = last_col
         processed_count = 0
         header_row = getattr(self, 'header_row', DEFAULT_HEADER_ROW)
         
+        # Verify DO Comments column exists, if not add it now
+        header_cell = sheet.cell(row=header_row, column=comment_col)
+        if header_cell.value != "DO Comments":
+            self.logger.warning("DO Comments column not found where expected, attempting to add it now")
+            self._add_do_comments_column(sheet)
+            # Update the comment column pointer to the newly added column
+            comment_col = sheet.max_column
+            
         # Check if we have required columns
         required_columns = ["Difference", "Include in CFO Cert Letter", "Explanation"]
         missing_columns = [col for col in required_columns if col not in column_indexes]
@@ -2034,37 +2066,68 @@ class ExcelProcessor:
             self.logger.warning(f"Missing required columns: {missing_columns}")
             return
             
+        self.logger.info(f"Processing rows from {header_row + 1} to {matching_row} with DO Comments in column {comment_col}")
+        
+        # Track the number of comments in each category
+        explanation_reasonable_count = 0
+        include_in_cfo_count = 0
+        explanation_required_count = 0
+            
         for row in range(header_row + 1, matching_row):
             try:
+                # Get the cells for required columns
                 difference_cell = sheet.cell(row=row, column=column_indexes["Difference"])
                 include_cfo_cell = sheet.cell(row=row, column=column_indexes["Include in CFO Cert Letter"])
                 explanation_cell = sheet.cell(row=row, column=column_indexes["Explanation"])
                 
-                difference_value = difference_cell.value
-                include_cfo_value = include_cfo_cell.value
+                # Extract values, ensuring we normalize to appropriate types
+                try:
+                    difference_value = float(difference_cell.value) if difference_cell.value not in (None, "") else 0
+                except (ValueError, TypeError):
+                    difference_value = 0
+                    
+                include_cfo_value = str(include_cfo_cell.value).upper() if include_cfo_cell.value is not None else ""
                 explanation_value = explanation_cell.value
                 
-                # Add comment cell with appropriate formatting
+                # Prepare the comment cell
                 comment_cell = sheet.cell(row=row, column=comment_col)
-                comment_cell.alignment = Alignment(wrap_text=True)
                 
-                if difference_value not in (None, ""):
-                    if include_cfo_value == "N" and explanation_value not in (None, 0, ""):
+                # Default formatting for all comment cells
+                comment_cell.alignment = Alignment(wrap_text=True, vertical='center')
+                comment_cell.border = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin')
+                )
+                
+                # Clear any existing fills or values
+                comment_cell.value = None
+                comment_cell.fill = PatternFill(fill_type=None)
+                
+                # Apply business rules to determine comments
+                if difference_value != 0:  # Only process rows with differences
+                    if include_cfo_value in ("N", "NO") and explanation_value not in (None, "", 0):
                         comment_cell.value = "Explanation Reasonable"
+                        explanation_reasonable_count += 1
                         processed_count += 1
-                    elif include_cfo_value == "Y" and explanation_value not in (None, ""):
+                    elif include_cfo_value in ("Y", "YES") and explanation_value not in (None, "", 0):
                         comment_cell.value = "Explanation Reasonable; Include in CFO Cert Letter"
+                        include_in_cfo_count += 1
                         processed_count += 1    
-                    elif explanation_value in (None, "", 0) and difference_value != 0:
+                    elif explanation_value in (None, "", 0):
                         comment_cell.value = "Explanation Required"
-                        # Add highlighting for cells that require attention
+                        # Add highlighting for cells that require attention - explicit color values
                         comment_cell.fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
+                        explanation_required_count += 1
                         processed_count += 1
                         
             except Exception as e:
-                self._update_status(f"Error processing row {row}: {str(e)}")
+                self.logger.warning(f"Error processing row {row}: {str(e)}")
         
-        self._update_status(f"Successfully processed {processed_count} rows")
+        self.logger.info(f"DO Comments summary: {explanation_reasonable_count} Explanation Reasonable, "
+                         f"{include_in_cfo_count} Include in CFO, {explanation_required_count} Explanation Required")
+        self._update_status(f"Successfully processed {processed_count} rows with DO Comments")
     
     def _validate_file(self, file_path: str) -> None:
         """
