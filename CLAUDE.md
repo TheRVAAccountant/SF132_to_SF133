@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT NOTE FOR CODE ASSISTANCE
+
+When working with this codebase, always prioritize the packaged scripts in the `src/sf132_sf133_recon/` directory. The root-level scripts are for legacy development and testing purposes only. All modifications, bug fixes, and enhancements should be made to the files in the `src/` directory, which contains the current and properly packaged version of the application.
+
 ## Project Overview
 
 SF132_to_SF133 is a Python application for processing SF132 and SF133 reconciliation Excel files. It automates the analysis and comparison of financial data, with features including:
@@ -31,14 +35,17 @@ pip install -r requirements.txt
 
 ## Running the Application
 
+### IMPORTANT: Use Packaged Scripts from src Directory
+Always use the packaged scripts in the `src/sf132_sf133_recon/` directory when working with this codebase. The root-level scripts are for development only and may contain errors.
+
 ### GUI Mode
 ```bash
-python main.py
+python -m src.sf132_sf133_recon.main
 ```
 
 ### CLI Mode
 ```bash
-python main.py [excel_file_path] [optional_password]
+python -m src.sf132_sf133_recon.main [excel_file_path] [optional_password]
 ```
 
 ## Running Tests
@@ -58,29 +65,28 @@ python -m unittest tests.test_excel_processor.TestExcelProcessor.test_generate_n
 
 ### Key Components
 
-1. **ExcelProcessingApplication** (`main.py`)
+1. **ExcelProcessingApplication** (`src/sf132_sf133_recon/main.py`)
    - Main application class that coordinates GUI, processing, and logging
    - Handles command-line and GUI modes
    - Sets up logging, error handling, and dependency checks
 
-2. **ExcelProcessorGUI** (`gui.py`)
+2. **ExcelProcessorGUI** (`src/sf132_sf133_recon/modules/gui.py`)
    - Provides the GUI interface using tkinter
    - Handles file selection, password input, progress tracking
    - Uses a queue-based communication system with the processor
 
-3. **ExcelProcessor** (`excel_processor.py`)
+3. **ExcelProcessor** (`src/sf132_sf133_recon/core/excel_processor.py`)
    - Core class that handles Excel file processing
    - Includes multiple fallback methods for processing files
    - Features robust error handling and repair mechanisms
    - Uses both openpyxl and win32com (COM) for Excel manipulation
 
 4. **Configuration System**
-   - `config.py` - Application-wide settings
-   - `excel_processor_config.py` - Detailed processor configuration
+   - `src/sf132_sf133_recon/config.py` - Application-wide settings
    - Environment variables - For deployment-specific configurations
 
 5. **Logging and Error Handling**
-   - `logger_config.py` - Sets up logging and error handling
+   - `src/sf132_sf133_recon/utils/logger.py` - Sets up logging and error handling
    - Performance logging decorators
    - Exception capturing and reporting
 

@@ -16,6 +16,12 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional, Any, List, Union
 from queue import Queue
 
+# Import from the modules package to avoid circular imports
+try:
+    from ..modules.excel_handler import close_excel_instances as handler_close_excel_instances
+except ImportError:
+    handler_close_excel_instances = None
+
 # Try to import Excel-related modules - they might be unavailable on some platforms
 try:
     import openpyxl
@@ -131,6 +137,16 @@ class ExcelProcessor:
     def close_excel_instances(self):
         """Terminate all existing Excel processes to prevent file locking."""
         self._update_status("Ensuring all Excel instances are closed...")
+        
+        # Use the module version if available
+        if handler_close_excel_instances:
+            try:
+                handler_close_excel_instances()
+                self._update_status("Excel instances closed via handler module")
+                return
+            except Exception as e:
+                self.logger.warning(f"Handler close_excel_instances failed: {e}")
+                # Fall through to local implementation
         
         try:
             import psutil
