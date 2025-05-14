@@ -1,0 +1,34 @@
+=IF(I11<> "",IF(ISNUMBER(SEARCH("X",I11)),
+    CONCATENATE("0",LEFT(I11,2),"-",MID(I11,3,1),"-",RIGHT(I11,4)),
+    CONCATENATE(
+        "0",
+        LEFT(I11,2),
+        "-",
+        "202",
+        IF(ISNUMBER(SEARCH("/",I11)),
+            MID(I11,3,1),
+            MID(I11,3,1)
+        ),
+        "-",
+        "202",
+        IF(ISNUMBER(SEARCH("/",I11)),
+            MID(I11,5,1),
+            MID(I11,3,1)
+        ),
+        "-",
+        RIGHT(IF(ISNUMBER(SEARCH("/",I11)),I11,I11),4)
+    )
+),"")
+
+
+=IF(K11<>"",IFERROR(
+    ROUND(
+        INDEX('Appor Data'!AL:AL,
+            MATCH(1,
+                (TRIM('Appor Data'!E:E)=TRIM($K11))*
+                (--('Appor Data'!AI:AI)=$B11),
+                0)
+        )/1000,
+        0),
+    "No Match"
+),"")
